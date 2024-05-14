@@ -65,7 +65,7 @@ namespace MasterKinder.Pages
 
             if (!string.IsNullOrEmpty(FragaomradeNr))
             {
-                responses = responses.Where(s => s.Fragetext == FragaomradeNr);
+                responses = responses.Where(s => s.FragaomradeNr.ToString() == FragaomradeNr);
             }
 
             if (!string.IsNullOrEmpty(Kon))
@@ -82,19 +82,19 @@ namespace MasterKinder.Pages
                 .Select(s => new SurveyResponse
                 {
                     Forskoleenhet = s.Forskoleenhet,
-                    Stadsdelsnamnd = s.Stadsdelsnamnd,
-                    AvserAr = s.AvserAr,
                     Fragaomradestext = s.Fragaomradestext,
                     Fragetext = s.Fragetext,
-                    SvarsalternativText = s.SvarsalternativText,
-                    Utfall = s.Utfall
+                    SvarsalternativText = s.SvarsalternativText
                 })
                 .ToListAsync();
 
             // Populate filter options
             Years = await _context.SurveyResponses.Select(r => r.AvserAr).Distinct().ToListAsync();
             Districts = await _context.SurveyResponses.Select(r => r.Stadsdelsnamnd).Distinct().ToListAsync();
-            QuestionAreas = await _context.SurveyResponses.Select(r => r.Fragetext).Distinct().ToListAsync();
+            QuestionAreas = await _context.SurveyResponses
+                .Select(r => r.FragaomradeNr.ToString())
+                .Distinct()
+                .ToListAsync();
         }
     }
 }
