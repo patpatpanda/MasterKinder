@@ -1,0 +1,80 @@
+﻿@page
+@model MasterKinder.Pages.IndexModel
+@{
+    ViewData["Title"] = "Dagis Finder";
+}
+
+<h1>Dagis Finder</h1>
+
+<form method="get">
+    <input type="text" name="SearchString" value="@Model.SearchString" placeholder="Sök efter förskola eller stadsdelsnämnd..." />
+    <select name="Year">
+        <option value="">Alla år</option>
+        @foreach (var year in Model.Years)
+        {
+            <option value="@year">@year</option>
+        }
+    </select>
+    <select name="Stadsdelsnamnd">
+        <option value="">Alla stadsdelar</option>
+        @foreach (var district in Model.Districts)
+        {
+            <option value="@district">@district</option>
+        }
+    </select>
+    <select name="FragaomradeNr">
+        <option value="">Alla frågeområden</option>
+        @foreach (var area in Model.QuestionAreas)
+        {
+            <option value="@area">@area</option>
+        }
+    </select>
+    <select name="Kon">
+        <option value="">Alla kön</option>
+        <option value="Kvinna">Kvinna</option>
+        <option value="Man">Man</option>
+    </select>
+    <button type="submit">Sök</button>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Förskoleenhet</th>
+            <th>Stadsdelsnämnd</th>
+            <th>År</th>
+            <th>Frågeområde</th>
+            <th>Fråga</th>
+            <th>Svar</th>
+            <th>Resultat</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.SurveyResponses)
+        {
+            <tr>
+                <td>@item.Forskoleenhet</td>
+                <td>@item.Stadsdelsnamnd</td>
+                <td>@item.AvserAr</td>
+                <td>@item.Fragaomradestext</td>
+                <td>@item.Fragetext</td>
+                <td>@item.SvarsalternativText</td>
+                <td>@item.Utfall</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div>
+    @if (Model.PageNumber > 1)
+    {
+        <a asp-page="./Index" asp-route-PageNumber="@(Model.PageNumber - 1)" asp-route-SearchString="@Model.SearchString" asp-route-Year="@Model.Year" asp-route-Stadsdelsnamnd="@Model.Stadsdelsnamnd" asp-route-FragaomradeNr="@Model.FragaomradeNr" asp-route-Kon="@Model.Kon">Previous</a>
+    }
+
+    Page @Model.PageNumber of @Model.TotalPages
+
+    @if (Model.PageNumber < Model.TotalPages)
+    {
+        <a asp-page="./Index" asp-route-PageNumber="@(Model.PageNumber + 1)" asp-route-SearchString="@Model.SearchString" asp-route-Year="@Model.Year" asp-route-Stadsdelsnamnd="@Model.Stadsdelsnamnd" asp-route-FragaomradeNr="@Model.FragaomradeNr" asp-route-Kon="@Model.Kon">Next</a>
+    }
+</div>
