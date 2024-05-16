@@ -1,74 +1,48 @@
 ﻿@page
-@model MasterKinder.Pages.IndexModel
-@{
-    ViewData["Title"] = "Dagis Finder";
-}
+@model MasterKinder.Pages.CsvService
 
-<h1>Dagis Finder</h1>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Survey Responses</title>
+</head>
+<body>
+    <h1>Survey Responses</h1>
 
-<form method="get">
-    <input type="text" name="SearchString" value="@Model.SearchString" placeholder="Sök efter förskola eller stadsdelsnämnd..." />
-    <select name="Year">
-        <option value="">Alla år</option>
-        @foreach (var year in Model.Years)
-        {
-            <option value="@year">@year</option>
-        }
-    </select>
-    <select name="Stadsdelsnamnd">
-        <option value="">Alla stadsdelar</option>
-        @foreach (var district in Model.Districts)
-        {
-            <option value="@district">@district</option>
-        }
-    </select>
-    <select name="FragaomradeNr">
-        <option value="">Alla frågeområden</option>
-        @foreach (var area in Model.QuestionAreas)
-        {
-            <option value="@area">@area</option>
-        }
-    </select>
-    <select name="Kon">
-        <option value="">Alla kön</option>
-        <option value="Kvinna">Kvinna</option>
-        <option value="Man">Man</option>
-    </select>
-    <button type="submit">Sök</button>
-</form>
-
-<table class="table">
-    <thead>
-        <tr>
-            <th>Förskoleenhet</th>
-            <th>Frågeområde</th>
-            <th>Fråga</th>
-            <th>Svar</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model.SurveyResponses)
-        {
+    <table>
+        <thead>
             <tr>
-                <td>@item.Forskoleenhet</td>
-                <td>@item.Fragaomradestext</td>
-                <td>@item.Fragetext</td>
-                <td>@item.SvarsalternativText</td>
+                <th>AvserAr</th>
+                <th>ResultatkategoriKod</th>
+                <th>Stadsdelsnamnd</th>
+                <th>Forskoleenhet</th>
+                <th>Fragaomradestext</th>
+                <th>Fragetext</th>
+                <th>SvarsalternativText</th>
+                <th>Kon</th>
             </tr>
-        }
-    </tbody>
-</table>
-
-<div>
-    @if (Model.PageNumber > 1)
-    {
-        <a asp-page="./Index" asp-route-PageNumber="@(Model.PageNumber - 1)" asp-route-SearchString="@Model.SearchString" asp-route-Year="@Model.Year" asp-route-Stadsdelsnamnd="@Model.Stadsdelsnamnd" asp-route-FragaomradeNr="@Model.FragaomradeNr" asp-route-Kon="@Model.Kon">Previous</a>
-    }
-
-    Page @Model.PageNumber of @Model.TotalPages
-
-    @if (Model.PageNumber < Model.TotalPages)
-    {
-        <a asp-page="./Index" asp-route-PageNumber="@(Model.PageNumber + 1)" asp-route-SearchString="@Model.SearchString" asp-route-Year="@Model.Year" asp-route-Stadsdelsnamnd="@Model.Stadsdelsnamnd" asp-route-FragaomradeNr="@Model.FragaomradeNr" asp-route-Kon="@Model.Kon">Next</a>
-    }
-</div>
+        </thead>
+        <tbody>
+            @foreach (var response in Model.SurveyResponses)
+            {
+                <tr>
+                    <td>@response.AvserAr</td>
+                  
+                    <td>@response.Stadsdelsnamnd</td>
+                    <td>@response.Forskoleenhet</td>
+                    <td>@response.Fragaomradestext</td>
+                    <td>@response.Fragetext</td>
+                    <td>
+                        @if (response.SvarsalternativText != "P�st�ende fr�ga" && response.SvarsalternativText != "Enk�tfr�ga")
+                        {
+                            @response.SvarsalternativText
+                        }
+                    </td>
+                
+                </tr>
+            }
+        </tbody>
+    </table>
+</body>
+</html>
