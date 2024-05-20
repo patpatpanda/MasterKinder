@@ -1,4 +1,4 @@
-using EFCore.BulkExtensions;
+ï»¿using EFCore.BulkExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using CsvHelper;
@@ -13,170 +13,150 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore;
 
 namespace MasterKinder.Pages
 {
-    public class CsvService : PageModel
+    public class IndexModel : PageModel
     {
-        private readonly ILogger<CsvService> _logger;
         private readonly AppDbContext _context;
+        private readonly ILogger<IndexModel> _logger;
 
-        public CsvService(ILogger<CsvService> logger, AppDbContext dbContext)
+        public IndexModel(AppDbContext context, ILogger<IndexModel> logger)
         {
+            _context = context;
             _logger = logger;
-            _context = dbContext;
         }
+        public IList<SurveyResponse> ForskolaFragaList { get; set; }
+        public int PageIndex { get; set; }
+        public int TotalPages { get; set; }
+        public double VetEjPercentage { get; set; }
 
-        [BindProperty]
-        public List<SurveyResponse> SurveyResponses { get; set; }
+        [BindProperty(SupportsGet = true)]
+        public string AvserAr { get; set; }
 
-        public async Task<IActionResult> OnGetAsync()
+        [BindProperty(SupportsGet = true)]
+        public string Stadsdelsnamnd { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string Forskoleenhet { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string SpecificQuestion { get; set; }
+
+        public List<string> UniqueAvserAr { get; set; }
+        public List<string> UniqueStadsdelsnamnd { get; set; }
+        public List<string> UniqueForskoleenhet { get; set; }
+        public List<string> UniqueSpecificQuestions { get; set; }
+        public List<ResponsePercentage> ResponsePercentages { get; set; }
+
+        private static readonly List<string> ExclusionWords = new List<string>
         {
-            string filePath = @"C:\Users\Nils-\Downloads\UND_FSK (2).csv";
+            "Kï¿½n",
+            "Kï¿½nsï¿½verskridande identitet eller uttryck",
+            "Religion eller trosuppfattning",
+            "Funktionsnedsï¿½ttning",
+            "Sexuell lï¿½ggning",
+            "ï¿½lder",
+            "Pï¿½stï¿½ende frï¿½ga",
+            "Enkï¿½tfrï¿½ga"
+        };
 
-            var stopwatch = new System.Diagnostics.Stopwatch();
-            stopwatch.Start();
-
-            SurveyResponses = await ReadSurveyResponsesFromCsv(filePath);
-            await AddSurveyResponsesToDbAsync(SurveyResponses, _context);
-
-            stopwatch.Stop();
-            var elapsedTime = stopwatch.Elapsed;
-            _logger.LogInformation($"Time taken to insert data: {elapsedTime}");
-
-            return Page();
-        }
-
-        public async Task<List<SurveyResponse>> ReadSurveyResponsesFromCsv(string filePath)
+        public async Task OnGetAsync(int pageIndex = 1)
         {
-            var surveyResponses = new List<SurveyResponse>();
-            int rowCount = 0;
-            int logCount = 0;
-            int expectedColumnCount = 27;
+            UniqueAvserAr = await _context.SurveyResponses.Select(f => f.AvserAr.ToString()).Distinct().ToListAsync();
+            UniqueStadsdelsnamnd = await _context.SurveyResponses.Select(f => f.Stadsdelsnamnd).Distinct().ToListAsync();
+            UniqueForskoleenhet = await _context.SurveyResponses.Select(f => f.Forskoleenhet).Distinct().ToListAsync();
+            UniqueSpecificQuestions = await _context.SurveyResponses.Select(f => f.Fragetext).Distinct().ToListAsync();
 
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            int pageSize = 10; // Antal poster per sida
+            var query = _context.SurveyResponses.AsQueryable();
+
+            if (!string.IsNullOrEmpty(AvserAr))
             {
-                HasHeaderRecord = true,
-                MissingFieldFound = null,
-                HeaderValidated = null,
-                IgnoreBlankLines = true,
-                Delimiter = ","
-            };
+                _logger.LogInformation("Filtering by AvserAr: {AvserAr}", AvserAr);
+                query = query.Where(f => f.AvserAr.ToString() == AvserAr);
+            }
 
-            using (var reader = new StreamReader(filePath, Encoding.UTF8))
-            using (var csv = new CsvReader(reader, config))
+            if (!string.IsNullOrEmpty(Stadsdelsnamnd))
             {
-                try
-                {
-                    // Read the header row to determine column indices
-                    csv.Read();
-                    csv.ReadHeader();
+                _logger.LogInformation("Filtering by Stadsdelsnamnd: {Stadsdelsnamnd}", Stadsdelsnamnd);
+                query = query.Where(f => f.Stadsdelsnamnd == Stadsdelsnamnd);
+            }
 
-                    while (csv.Read())
+            if (!string.IsNullOrEmpty(Forskoleenhet))
+            {
+                _logger.LogInformation("Filtering by Forskoleenhet: {Forskoleenhet}", Forskoleenhet);
+                query = query.Where(f => f.Forskoleenhet == Forskoleenhet);
+            }
+
+            if (!string.IsNullOrEmpty(SpecificQuestion))
+            {
+                _logger.LogInformation("Filtering by SpecificQuestion: {SpecificQuestion}", SpecificQuestion);
+                query = query.Where(f => f.Fragetext.Trim() == SpecificQuestion.Trim());
+            }
+
+            var filteredQuery = query.Where(f => !ExclusionWords.Any(word => f.SvarsalternativText.Contains(word)));
+
+            TotalPages = (int)Math.Ceiling((double)await filteredQuery.CountAsync() / pageSize);
+
+            ForskolaFragaList = await filteredQuery
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            _logger.LogInformation("Total items found: {TotalItems}", ForskolaFragaList.Count);
+
+            PageIndex = pageIndex;
+
+
+            if (!string.IsNullOrEmpty(SpecificQuestion))
+            {
+                var specificQuery = filteredQuery.Where(f => f.Fragetext.Trim() == SpecificQuestion.Trim());
+                int totalCount = await specificQuery.CountAsync();
+
+                _logger.LogInformation("Total count for SpecificQuestion: {TotalCount}", totalCount);
+
+                var responseCounts = await specificQuery
+                    .GroupBy(f => f.SvarsalternativText)
+                    .Select(g => new
                     {
-                        var row = csv.Context.Parser.Record;
+                        Response = g.Key,
+                        Count = g.Count()
+                    })
+                    .ToListAsync();
 
-                        // Ensure the row has enough columns before processing
-                        if (row.Length < expectedColumnCount)
-                        {
-                            _logger.LogWarning($"Row has fewer columns than expected: {row.Length} columns found. Row data: {string.Join(", ", row)}");
-                            continue;
-                        }
+                ResponsePercentages = responseCounts
+                    .Select(rc => new ResponsePercentage
+                    {
+                        Response = rc.Response,
+                        Count = rc.Count,
+                        Percentage = (double)rc.Count / totalCount * 100
+                    })
+                    .ToList();
 
-                        // Ensure proper conversion of each field
-                        var surveyResponse = new SurveyResponse
-                        {
-                            AvserAr = row[0],
-                           
-                            Stadsdelsnamnd = row[3],
-                            Forskoleenhet = row[4],
-                            Fragaomradestext = row[8],
-                            Fragetext = SafeGetField(row, 10, 11),
-                            SvarsalternativText = SafeGetSvarsalternativText(row),
-                           
-                        };
-                        surveyResponses.Add(surveyResponse);
-
-                        // Log only the first 10 records to avoid too much logging
-                        
-
-                        rowCount++;
-                    }
-
-                    _logger.LogInformation($"Total rows processed: {rowCount}");
-                }
-                catch (HeaderValidationException ex)
+                foreach (var response in ResponsePercentages)
                 {
-                    _logger.LogError($"Header validation error: {ex.Message}");
-                }
-                catch (ReaderException ex)
-                {
-                    _logger.LogError($"Reader error: {ex.Message}");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError($"Error reading CSV file: {ex.Message}");
+                    _logger.LogInformation("Response: {Response}, Count: {Count}, Percentage: {Percentage}", response.Response, response.Count, response.Percentage);
                 }
             }
-
-            return surveyResponses;
+            else
+            {
+                ResponsePercentages = new List<ResponsePercentage>();
+            }
         }
 
-        private string SafeGetField(string[] row, int primaryIndex, int fallbackIndex = -1)
+        public string GenerateOptionTag(string value, string currentValue)
         {
-            try
-            {
-                string value = row[primaryIndex];
-                if (fallbackIndex != -1 && Regex.IsMatch(value, @"^\d+$")) // Check if the value contains only digits
-                {
-                    return row[fallbackIndex];
-                }
-                return value;
-            }
-            catch
-            {
-                return "Unknown";
-            }
+            var selected = value == currentValue ? "selected" : string.Empty;
+            return $"<option value=\"{value}\" {selected}>{value}</option>";
         }
+    }
 
-        private string SafeGetSvarsalternativText(string[] row)
-        {
-            int startIndex = 18;
-            int endIndex = 22;
-
-            for (int i = startIndex; i <= endIndex; i++)
-            {
-                if (i < row.Length && !Regex.IsMatch(row[i], @"^\d+$") && row[i] != "Påstående fråga")
-                {
-                    return row[i];
-                }
-                // Check if the value at index i is "Påstående fråga", then use the index five columns after
-                if (i < row.Length && row[i] == "Påstående fråga" && (i + 5) < row.Length && !Regex.IsMatch(row[i + 5], @"^\d+$"))
-                {
-                    return row[i + 5];
-                }
-            }
-
-            // If all the relevant columns are numeric or contain "Påstående fråga", check column 23
-            if (row.Length > 23 && !Regex.IsMatch(row[23], @"^\d+$"))
-            {
-                return row[23];
-            }
-
-            return "Unknown";
-        }
-
-        public async Task AddSurveyResponsesToDbAsync(List<SurveyResponse> surveyResponses, AppDbContext context)
-        {
-            try
-            {
-                await context.BulkInsertAsync(surveyResponses, new BulkConfig { BatchSize = 5000 });
-                _logger.LogInformation($"Successfully inserted {surveyResponses.Count} survey responses into the database.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error inserting data into the database: {ex.Message}");
-            }
-        }
+    public class ResponsePercentage
+    {
+        public string Response { get; set; }
+        public int Count { get; set; }
+        public double Percentage { get; set; }
     }
 }

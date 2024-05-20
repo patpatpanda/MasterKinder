@@ -1,48 +1,106 @@
 ﻿@page
-@model MasterKinder.Pages.CsvService
+@model MasterKinder.Pages.IndexModel
 
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8" />
-    <title>Survey Responses</title>
-</head>
-<body>
-    <h1>Survey Responses</h1>
 
-    <table>
+<h2>Förskolefrågor</h2>
+
+<form method="get">
+    <div class="form-group">
+        <label for="AvserAr">År</label>
+        <select id="AvserAr" name="AvserAr" class="form-control">
+            <option value="">Alla</option>
+            @foreach (var year in Model.UniqueAvserAr)
+            {
+                @Html.Raw(Model.GenerateOptionTag(year, Model.AvserAr))
+            }
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="Stadsdelsnamnd">Stadsdelsnämnd</label>
+        <select id="Stadsdelsnamnd" name="Stadsdelsnamnd" class="form-control">
+            <option value="">Alla</option>
+            @foreach (var stadsdel in Model.UniqueStadsdelsnamnd)
+            {
+                @Html.Raw(Model.GenerateOptionTag(stadsdel, Model.Stadsdelsnamnd))
+            }
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="Forskoleenhet">Förskoleenhet</label>
+        <select id="Forskoleenhet" name="Forskoleenhet" class="form-control">
+            <option value="">Alla</option>
+            @foreach (var enhet in Model.UniqueForskoleenhet)
+            {
+                @Html.Raw(Model.GenerateOptionTag(enhet, Model.Forskoleenhet))
+            }
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="SpecificQuestion">Specifik fråga</label>
+        <select id="SpecificQuestion" name="SpecificQuestion" class="form-control">
+            <option value="">Välj en fråga</option>
+            @foreach (var question in Model.UniqueSpecificQuestions)
+            {
+                @Html.Raw(Model.GenerateOptionTag(question.Trim(), Model.SpecificQuestion?.Trim()))
+            }
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Filtrera</button>
+</form>
+
+@if (Model.ResponsePercentages != null && Model.ResponsePercentages.Count > 0)
+{
+    <h3>Procentandelar för svar på frågan "@Model.SpecificQuestion"</h3>
+    <table class="table">
         <thead>
             <tr>
-                <th>AvserAr</th>
-                <th>ResultatkategoriKod</th>
-                <th>Stadsdelsnamnd</th>
-                <th>Forskoleenhet</th>
-                <th>Fragaomradestext</th>
-                <th>Fragetext</th>
-                <th>SvarsalternativText</th>
-                <th>Kon</th>
+                <th>Svar</th>
+                <th>Antal</th>
+                <th>Procentandel</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var response in Model.SurveyResponses)
+            @foreach (var response in Model.ResponsePercentages)
             {
                 <tr>
-                    <td>@response.AvserAr</td>
-                  
-                    <td>@response.Stadsdelsnamnd</td>
-                    <td>@response.Forskoleenhet</td>
-                    <td>@response.Fragaomradestext</td>
-                    <td>@response.Fragetext</td>
-                    <td>
-                        @if (response.SvarsalternativText != "P�st�ende fr�ga" && response.SvarsalternativText != "Enk�tfr�ga")
-                        {
-                            @response.SvarsalternativText
-                        }
-                    </td>
-                
+                    <td>@response.Response</td>
+                    <td>@response.Count</td>
+                    <td>@response.Percentage %</td>
                 </tr>
             }
         </tbody>
     </table>
-</body>
-</html>
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>År</th>
+            <th>Stadsdelsnämnd</th>
+            <th>Förskoleenhet</th>
+            <th>Frågeområde</th>
+            <th>Fråga</th>
+            <th>Svar</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.ForskolaFragaList)
+        {
+            <tr>
+                <td>@item.AvserAr</td>
+                <td>@item.Stadsdelsnamnd</td>
+                <td>@item.Forskoleenhet</td>
+                <td>@item.Fragaomradestext</td>
+                <td>@item.Fragetext</td>
+                <td>@item.SvarsalternativText</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+
+
+
+
+
