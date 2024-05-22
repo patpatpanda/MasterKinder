@@ -9,7 +9,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultSQLConnection")));
 
-
+builder.Services.AddScoped<CsvService>();
 var app = builder.Build();
 
 // Load CSV Data
