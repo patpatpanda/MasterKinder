@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MasterKinder.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240514075117_lol")]
-    partial class lol
+    [Migration("20240523085514_asd")]
+    partial class asd
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -32,9 +32,8 @@ namespace MasterKinder.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AntalSvarsalternativ")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("AntalSvarsalternativ")
+                        .HasColumnType("int");
 
                     b.Property<string>("AvserAr")
                         .IsRequired()
@@ -52,19 +51,13 @@ namespace MasterKinder.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("FragaNr")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("FragaNr")
+                        .HasColumnType("int");
 
-                    b.Property<string>("FragaomradeNr")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("FragaomradeNr")
+                        .HasColumnType("int");
 
                     b.Property<string>("Fragaomradestext")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Fragcategory")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -72,7 +65,11 @@ namespace MasterKinder.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Fragetype")
+                    b.Property<string>("Fragetyp")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Fragkategori")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -112,9 +109,8 @@ namespace MasterKinder.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("SvarsalternativNr")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("SvarsalternativNr")
+                        .HasColumnType("int");
 
                     b.Property<string>("SvarsalternativText")
                         .IsRequired()
@@ -124,17 +120,14 @@ namespace MasterKinder.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("TotalVarde")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("TotalVarde")
+                        .HasColumnType("int");
 
-                    b.Property<string>("TotalVarde_ExklVetEj")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("TotalVarde_ExklVetEj")
+                        .HasColumnType("int");
 
-                    b.Property<string>("Utfall")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Utfall")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 

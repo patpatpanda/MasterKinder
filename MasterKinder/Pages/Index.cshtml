@@ -1,35 +1,32 @@
 ﻿@page
 @model MasterKinder.Pages.IndexModel
 @{
-    ViewData["Title"] = "Survey Response Data";
+    ViewData["Title"] = "Survey Responses";
 }
 
-<h1>@ViewData["Title"]</h1>
+<h2>Survey Responses</h2>
 
-<form method="post">
-    <label for="questionSelect">Select Question:</label>
-    <select id="questionSelect" name="SelectedQuestion">
-        @foreach (var question in Model.Questions)
-        {
-            var isSelected = question == Model.SelectedQuestion ? "selected" : "";
-            <option value="@question" selected="@isSelected">@question</option>
-        }
-    </select>
+<form method="post" asp-page-handler="SelectQuestion">
+    <div>
+        <label for="questionSelect">Select Question:</label>
+        <select id="questionSelect" name="SelectedQuestion" asp-for="SelectedQuestion" asp-items="@(new SelectList(Model.Questions, Model.SelectedQuestion))">
+        </select>
+    </div>
+    <div>
+        <label for="forskoleverksamhetSelect">Select Forskoleverksamhet:</label>
+        <select id="forskoleverksamhetSelect" name="SelectedForskoleverksamhet" asp-for="SelectedForskoleverksamhet" asp-items="@(new SelectList(Model.Forskoleverksamheter, Model.SelectedForskoleverksamhet))">
+        </select>
+    </div>
     <button type="submit">Load Data</button>
 </form>
 
-<form method="post" asp-page-handler="DeleteRowsWithNumbersInFragetext">
-    <button type="submit">Delete Rows with Numbers in Fragetext</button>
-</form>
-
-<h2>Response Percentages for the Question</h2>
-@if (Model.ResponsePercentages != null && Model.ResponsePercentages.Count > 0)
+@if (Model.ResponsePercentages != null && Model.ResponsePercentages.Any())
 {
-    @if (Model.ResponsePercentages.Values.Sum() < 100)
+    <h3>Response Percentages for the Question</h3>
+    @if (Model.ResponsePercentages.Sum(rp => rp.Value) != 100)
     {
-        <div>Warning: The response percentages do not sum up to 100%</div>
+        <p>Warning: The response percentages do not sum up to 100%</p>
     }
-
     <table>
         <thead>
             <tr>
@@ -38,23 +35,14 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var item in Model.ResponsePercentages)
+            @foreach (var response in Model.ResponsePercentages)
             {
                 <tr>
-                    <td>@item.Key</td>
-                    <td>@item.Value.ToString("F2") %</td>
+                    <td>@response.Key</td>
+                    <td>@response.Value.ToString("F2") %</td>
                 </tr>
             }
         </tbody>
     </table>
 }
-else
-{
-    <div>No responses found for the question.</div>
-}
 
-<h3>Specific Response Percentage ('Vet ej')</h3>
-<p>@Model.SpecificResponsePercentage.ToString("F2") %</p>
-
-<h3>Overall Satisfaction Percentage ('Nöjd')</h3>
-<p>@Model.OverallSatisfactionPercentage.ToString("F2") %</p>

@@ -3,14 +3,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MasterKinder.Data
 {
-    public class AppDbContext :  DbContext
+    public class AppDbContext : DbContext
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+        public AppDbContext(DbContextOptions<AppDbContext> options)
+            : base(options)
         {
-
         }
 
         public DbSet<SurveyResponse> SurveyResponses { get; set; }
-
     }
+
 }
