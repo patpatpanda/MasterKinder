@@ -4,8 +4,10 @@
     ViewData["Title"] = "Survey Responses";
 }
 
+
+
 <div class="container">
-    <h2>Förskola statistik</h2>
+    <h2>Förskola frågor(2023)</h2>
 
     <form method="post">
         <div>
@@ -14,14 +16,14 @@
             </select>
         </div>
         <div>
-            <label for="forskoleverksamhetSelect">Select Förskoleverksamhet:</label>
+            <label for="forskoleverksamhetSelect">Välj Förskoleverksamhet:</label>
             <select id="forskoleverksamhetSelect" name="SelectedForskoleverksamhet" asp-for="SelectedForskoleverksamhet" asp-items="@(new SelectList(Model.Forskoleverksamheter))">
             </select>
         </div>
-        <button type="submit" asp-page-handler="SelectQuestion"><i class="fas fa-search"></i>Sök</button>
+        <button type="submit" asp-page-handler="SelectQuestion"><i class="fas fa-search"></i> Sök</button>
     </form>
 
-   
+    <h3>Response Percentages for the Question</h3>
     @if (Model.ResponsePercentages != null && Model.ResponsePercentages.Any())
     {
         <table class="table">
@@ -47,5 +49,3 @@
         <p>No data available for the selected question and förskoleverksamhet.</p>
     }
 </div>
-
-             
