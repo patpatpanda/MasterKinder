@@ -17,28 +17,30 @@ using EFCore.BulkExtensions;
 
 public class CsvService
 {
+    private readonly IServiceProvider _serviceProvider;
+    private readonly ILogger<CsvService> _logger;
     private readonly AppDbContext _context;
     private readonly string _blobUri;
-    private readonly ILogger<CsvService> _logger;
 
-    public CsvService(AppDbContext context, IConfiguration configuration, ILogger<CsvService> logger)
+    public CsvService(IServiceProvider serviceProvider, ILogger<CsvService> logger, AppDbContext context, IConfiguration configuration)
     {
+        _serviceProvider = serviceProvider;
+        _logger = logger;
         _context = context;
         _blobUri = configuration["BlobUri"];
-        _logger = logger;
     }
 
     public async Task LoadCsvToDatabaseAsync()
     {
         _logger.LogInformation("Starting CSV download and import process.");
-        await DownloadAndInsertCsvFromBlobAsync(_blobUri);
+        await DownloadAndInsertCsvFromBlobAsync();
         _logger.LogInformation("CSV download and import process completed.");
     }
 
-    private async Task DownloadAndInsertCsvFromBlobAsync(string blobUri)
+    private async Task DownloadAndInsertCsvFromBlobAsync()
     {
         _logger.LogInformation("Downloading CSV file from blob storage.");
-        BlobClient blobClient = new BlobClient(new Uri(blobUri));
+        BlobClient blobClient = new BlobClient(new Uri(_blobUri));
         BlobDownloadInfo download = await blobClient.DownloadAsync();
         _logger.LogInformation("CSV file downloaded successfully.");
 
@@ -51,10 +53,9 @@ public class CsvService
         {
             csv.Context.RegisterClassMap<SurveyResponseMap>();
 
-            const int batchSize = 20000; // Set batch size to 20000
+            const int batchSize = 10000; // Set batch size to 10000
             List<SurveyResponse> batch = new List<SurveyResponse>(batchSize);
             int totalRecords = 0;
-            int rowNumber = 0;
 
             _logger.LogInformation("Starting to read and process CSV records.");
 
@@ -62,24 +63,14 @@ public class CsvService
             {
                 try
                 {
-                    rowNumber++;
                     var record = csv.GetRecord<SurveyResponse>();
+                    batch.Add(record);
+                    totalRecords++;
 
-                    // Filter for the year 2023
-                    if (record.AvserAr == "2023")
+                    if (batch.Count >= batchSize)
                     {
-                        batch.Add(record);
-                        totalRecords++;
-
-                        if (batch.Count >= batchSize)
-                        {
-                            await InsertBatchAsync(batch, totalRecords);
-                        }
-                    }
-
-                    if (rowNumber % 10000 == 0)
-                    {
-                        _logger.LogInformation($"Processed {rowNumber} rows.");
+                        await InsertBatchAsync(batch, totalRecords);
+                        batch.Clear();
                     }
                 }
                 catch (Exception ex)
@@ -99,30 +90,34 @@ public class CsvService
 
     private async Task InsertBatchAsync(List<SurveyResponse> batch, int totalRecords)
     {
-        try
+        using (var scope = _serviceProvider.CreateScope())
         {
-            await _context.BulkInsertAsync(batch);
-            _logger.LogInformation($"Inserted batch of {batch.Count} records, total records inserted: {totalRecords}");
-            batch.Clear();
+            try
+            {
+                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                context.SurveyResponses.AddRange(batch);
+                await context.SaveChangesAsync();
+                _logger.LogInformation($"Inserted batch of {batch.Count} records, total records inserted: {totalRecords}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error inserting batch of records. Total records inserted: {totalRecords}");
+            }
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error inserting batch to database.");
-        }
-    }
-
-    public Dictionary<string, int> CountResponsesPerQuestion()
-    {
-        return _context.SurveyResponses
-            .GroupBy(sr => sr.Fragetext)
-            .Select(g => new { Question = g.Key, Count = g.Sum(sr => sr.Utfall) })
-            .ToDictionary(g => g.Question, g => g.Count);
     }
 
     public List<string> GetForskoleverksamheter()
     {
         return _context.SurveyResponses
             .Select(sr => sr.Forskoleverksamhet)
+            .Distinct()
+            .ToList();
+    }
+
+    public List<string> GetQuestions()
+    {
+        return _context.SurveyResponses
+            .Select(sr => sr.Fragetext)
             .Distinct()
             .ToList();
     }
@@ -162,10 +157,20 @@ public class CsvService
             _logger.LogInformation($"Response: {response.Response}, Count: {response.Count}");
         }
 
-        var responsePercentages = responseCounts.ToDictionary(
-            x => x.Response,
-            x => (double)x.Count / totalResponses * 100
-        );
+        var responsePercentages = new Dictionary<string, double>();
+
+        foreach (var response in responseCounts)
+        {
+            var key = GetResponseText(response.Response);
+            if (responsePercentages.ContainsKey(key))
+            {
+                responsePercentages[key] += (double)response.Count / totalResponses * 100;
+            }
+            else
+            {
+                responsePercentages[key] = (double)response.Count / totalResponses * 100;
+            }
+        }
 
         foreach (var response in responsePercentages)
         {
@@ -175,10 +180,33 @@ public class CsvService
         return responsePercentages;
     }
 
-
-    public double CalculateSpecificResponsePercentage(string questionText, string responseText)
+    private string GetResponseText(string response)
     {
-        var totalResponses = _context.SurveyResponses
+        var responseMapping = new Dictionary<string, string>
+        {
+            { "1", "Instämmer inte alls" },
+            { "2", "Instämmer i liten utsträckning" },
+            { "3", "Instämmer till viss del" },
+            { "4", "Instämmer i stor utsträckning" },
+            { "5", "Instämmer helt" },
+            { "Instämmer inte alls", "Instämmer inte alls" },
+            { "Vet ej", "Vet ej" },
+            { "Övrig", "Övrig" }
+        };
+
+        return responseMapping.ContainsKey(response) ? responseMapping[response] : response;
+    }
+
+    public double CalculateSpecificResponsePercentage(string questionText, string responseText, string forskoleverksamhet)
+    {
+        var query = _context.SurveyResponses.AsQueryable();
+
+        if (!string.IsNullOrEmpty(forskoleverksamhet))
+        {
+            query = query.Where(sr => sr.Forskoleverksamhet == forskoleverksamhet);
+        }
+
+        var totalResponses = query
             .Where(sr => sr.Fragetext == questionText)
             .Sum(sr => sr.Utfall);
 
@@ -187,18 +215,23 @@ public class CsvService
             return 0;
         }
 
-        var specificResponseCount = _context.SurveyResponses
+        var specificResponseCount = query
             .Where(sr => sr.Fragetext == questionText && sr.SvarsalternativText == responseText)
             .Sum(sr => sr.Utfall);
-
-        _logger.LogInformation($"Total responses for '{questionText}': {totalResponses}, Specific '{responseText}' count: {specificResponseCount}");
 
         return (double)specificResponseCount / totalResponses * 100;
     }
 
-    public double CalculateOverallSatisfactionPercentage(string questionText)
+    public double CalculateOverallSatisfactionPercentage(string questionText, string forskoleverksamhet)
     {
-        var totalResponses = _context.SurveyResponses
+        var query = _context.SurveyResponses.AsQueryable();
+
+        if (!string.IsNullOrEmpty(forskoleverksamhet))
+        {
+            query = query.Where(sr => sr.Forskoleverksamhet == forskoleverksamhet);
+        }
+
+        var totalResponses = query
             .Where(sr => sr.Fragetext == questionText)
             .Sum(sr => sr.Utfall);
 
@@ -207,31 +240,29 @@ public class CsvService
             return 0;
         }
 
-        var satisfiedResponses = _context.SurveyResponses
+        var satisfiedResponses = query
             .Where(sr => sr.Fragetext == questionText && sr.GraderingSvarsalternativ == "Nöjd")
             .Sum(sr => sr.Utfall);
-
-        _logger.LogInformation($"Total responses for '{questionText}': {totalResponses}, Satisfied responses: {satisfiedResponses}");
 
         return (double)satisfiedResponses / totalResponses * 100;
     }
 
-    public Dictionary<string, int> CountResponsesByGender()
+    public Dictionary<string, int> CountResponsesByGender(string forskoleverksamhet)
     {
-        return _context.SurveyResponses
+        var query = _context.SurveyResponses.AsQueryable();
+
+        if (!string.IsNullOrEmpty(forskoleverksamhet))
+        {
+            query = query.Where(sr => sr.Forskoleverksamhet == forskoleverksamhet);
+        }
+
+        return query
             .GroupBy(sr => sr.Kon)
             .Select(g => new { Gender = g.Key, Count = g.Sum(sr => sr.Utfall) })
             .ToDictionary(g => g.Gender, g => g.Count);
     }
-
-    public List<string> GetQuestions()
-    {
-        return _context.SurveyResponses
-            .Select(sr => sr.Fragetext)
-            .Distinct()
-            .ToList();
-    }
 }
+
 
 public class SurveyResponseMap : ClassMap<SurveyResponse>
 {

@@ -4,45 +4,48 @@
     ViewData["Title"] = "Survey Responses";
 }
 
-<h2>Survey Responses</h2>
+<div class="container">
+    <h2>Förskola statistik</h2>
 
-<form method="post" asp-page-handler="SelectQuestion">
-    <div>
-        <label for="questionSelect">Select Question:</label>
-        <select id="questionSelect" name="SelectedQuestion" asp-for="SelectedQuestion" asp-items="@(new SelectList(Model.Questions, Model.SelectedQuestion))">
-        </select>
-    </div>
-    <div>
-        <label for="forskoleverksamhetSelect">Select Forskoleverksamhet:</label>
-        <select id="forskoleverksamhetSelect" name="SelectedForskoleverksamhet" asp-for="SelectedForskoleverksamhet" asp-items="@(new SelectList(Model.Forskoleverksamheter, Model.SelectedForskoleverksamhet))">
-        </select>
-    </div>
-    <button type="submit">Load Data</button>
-</form>
+    <form method="post">
+        <div>
+            <label for="questionSelect">Select Question:</label>
+            <select id="questionSelect" name="SelectedQuestion" asp-for="SelectedQuestion" asp-items="@(new SelectList(Model.Questions))">
+            </select>
+        </div>
+        <div>
+            <label for="forskoleverksamhetSelect">Select Förskoleverksamhet:</label>
+            <select id="forskoleverksamhetSelect" name="SelectedForskoleverksamhet" asp-for="SelectedForskoleverksamhet" asp-items="@(new SelectList(Model.Forskoleverksamheter))">
+            </select>
+        </div>
+        <button type="submit" asp-page-handler="SelectQuestion"><i class="fas fa-search"></i>Sök</button>
+    </form>
 
-@if (Model.ResponsePercentages != null && Model.ResponsePercentages.Any())
-{
-    <h3>Response Percentages for the Question</h3>
-    @if (Model.ResponsePercentages.Sum(rp => rp.Value) != 100)
+   
+    @if (Model.ResponsePercentages != null && Model.ResponsePercentages.Any())
     {
-        <p>Warning: The response percentages do not sum up to 100%</p>
-    }
-    <table>
-        <thead>
-            <tr>
-                <th>Response</th>
-                <th>Percentage</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var response in Model.ResponsePercentages)
-            {
+        <table class="table">
+            <thead>
                 <tr>
-                    <td>@response.Key</td>
-                    <td>@response.Value.ToString("F2") %</td>
+                    <th>Svar</th>
+                    <th>Procent</th>
                 </tr>
-            }
-        </tbody>
-    </table>
-}
+            </thead>
+            <tbody>
+                @foreach (var response in Model.ResponsePercentages)
+                {
+                    <tr>
+                        <td>@response.Key</td>
+                        <td>@string.Format("{0:0.00} %", response.Value)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No data available for the selected question and förskoleverksamhet.</p>
+    }
+</div>
 
+             

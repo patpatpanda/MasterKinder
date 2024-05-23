@@ -18,26 +18,79 @@ html {
 }
 
 body {
-  margin-bottom: 60px;
+    font-family: 'Arial', sans-serif;
+    background: #f0f0f0;
+    color: #333;
 }
 
-.pagination {
+.container {
+    max-width: 800px;
+    margin: 50px auto;
+    background: #fff;
+    padding: 20px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+h2, h3 {
+    text-align: center;
+    color: #4CAF50;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+    form div {
+        display: flex;
+        flex-direction: column;
+    }
+
+    form label {
+        font-weight: bold;
+    }
+
+    form select, form button {
+        padding: 10px;
+        border: 2px solid #4CAF50;
+        border-radius: 5px;
+    }
+
+    form button {
+        background: #4CAF50;
+        color: #fff;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+        form button:hover {
+            background: #45a049;
+        }
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
     margin-top: 20px;
 }
 
-    .pagination a, .pagination span {
-        margin: 0 5px;
-        padding: 5px 10px;
+    .table th, .table td {
+        padding: 12px;
         border: 1px solid #ddd;
-        text-decoration: none;
-        color: #007bff;
+        text-align: center;
     }
 
-    .pagination span {
-        background-color: #007bff;
+    .table th {
+        background: #4CAF50;
         color: #fff;
     }
 
-    .pagination a:hover {
-        background-color: #ddd;
+    .table tr:nth-child(even) {
+        background: #f2f2f2;
+    }
+
+    .table tr:hover {
+        background: #ddd;
     }

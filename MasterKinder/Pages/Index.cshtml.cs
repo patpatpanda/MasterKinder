@@ -1,9 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace MasterKinder.Pages
 {
@@ -22,10 +19,10 @@ namespace MasterKinder.Pages
         public List<string> Questions { get; set; }
 
         [BindProperty]
-        public List<string> Forskoleverksamheter { get; set; }
+        public string SelectedQuestion { get; set; }
 
         [BindProperty]
-        public string SelectedQuestion { get; set; }
+        public List<string> Forskoleverksamheter { get; set; }
 
         [BindProperty]
         public string SelectedForskoleverksamhet { get; set; }
@@ -36,13 +33,9 @@ namespace MasterKinder.Pages
         {
             Questions = _csvService.GetQuestions();
             Forskoleverksamheter = _csvService.GetForskoleverksamheter();
-
-            if (Questions != null && Questions.Any())
-            {
-                SelectedQuestion = Questions.FirstOrDefault();
-                ResponsePercentages = _csvService.CalculateResponsePercentages(SelectedQuestion, SelectedForskoleverksamhet);
-            }
-
+            SelectedQuestion = Questions.FirstOrDefault();
+            SelectedForskoleverksamhet = Forskoleverksamheter.FirstOrDefault();
+            ResponsePercentages = _csvService.CalculateResponsePercentages(SelectedQuestion, SelectedForskoleverksamhet);
             return Page();
         }
 
@@ -51,10 +44,6 @@ namespace MasterKinder.Pages
             Questions = _csvService.GetQuestions();
             Forskoleverksamheter = _csvService.GetForskoleverksamheter();
             ResponsePercentages = _csvService.CalculateResponsePercentages(SelectedQuestion, SelectedForskoleverksamhet);
-
-            _logger.LogInformation($"SelectedQuestion: {SelectedQuestion}, SelectedForskoleverksamhet: {SelectedForskoleverksamhet}");
-            _logger.LogInformation($"ResponsePercentages count: {ResponsePercentages.Count}");
-
             return Page();
         }
     }
