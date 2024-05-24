@@ -4,32 +4,39 @@
     ViewData["Title"] = "Survey Responses";
 }
 
+<h2>Fråga mig om förskola (2023)</h2>
 
-
-<div class="container">
-    <h2>Förskola frågor(2023)</h2>
-
-    <form method="post">
-        <div>
-            <label for="questionSelect">Select Question:</label>
-            <select id="questionSelect" name="SelectedQuestion" asp-for="SelectedQuestion" asp-items="@(new SelectList(Model.Questions))">
-            </select>
+<form method="post">
+    <div>
+        <label for="questionSelect">Select Question:</label>
+        <select id="questionSelect" name="SelectedQuestion" asp-for="SelectedQuestion" asp-items="@(new SelectList(Model.Questions))">
+            <option value="">-- Select a question --</option> <!-- Added default empty option -->
+        </select>
+    </div>
+    <div>
+        <label for="forskoleverksamhetSelect">Select Förskoleverksamhet:</label>
+        <select id="forskoleverksamhetSelect" name="SelectedForskoleverksamhet" asp-for="SelectedForskoleverksamhet" asp-items="@(new SelectList(Model.Forskoleverksamheter))">
+            <option value="">-- Select Förskoleverksamhet --</option> <!-- Added default empty option -->
+        </select>
+    </div>
+    <div class="sleep">
+        <div id="loadingSpinner" style="display: none;">
+            <div class="spinner"></div>
         </div>
-        <div>
-            <label for="forskoleverksamhetSelect">Välj Förskoleverksamhet:</label>
-            <select id="forskoleverksamhetSelect" name="SelectedForskoleverksamhet" asp-for="SelectedForskoleverksamhet" asp-items="@(new SelectList(Model.Forskoleverksamheter))">
-            </select>
-        </div>
-        <button type="submit" asp-page-handler="SelectQuestion"><i class="fas fa-search"></i> Sök</button>
-    </form>
 
-    <h3>Response Percentages for the Question</h3>
+        <button id="loginButton" onclick="startLoginProcess()" type="submit" asp-page-handler="SelectQuestion">Sök</button>
+    </div>
+</form>
+
+
+@if (Model.SearchPerformed)
+{
     @if (Model.ResponsePercentages != null && Model.ResponsePercentages.Any())
     {
         <table class="table">
             <thead>
                 <tr>
-                    <th>Svar</th>
+                    <th>Resultat</th>
                     <th>Procent</th>
                 </tr>
             </thead>
@@ -48,4 +55,149 @@
     {
         <p>No data available for the selected question and förskoleverksamhet.</p>
     }
-</div>
+}
+
+
+<script>
+
+
+    document.querySelectorAll('.form-control').forEach(input => {
+        input.addEventListener('input', function () {
+            const feedbackIcon = this.nextElementSibling; // Anta att feedbackIcon är span-elementet direkt efter input
+            if (this.value.trim() !== '') {
+                feedbackIcon.style.display = 'inline';
+            } else {
+                feedbackIcon.style.display = 'none';
+            }
+        });
+    });
+
+
+
+    setTimeout(function () {
+        var successMessage = document.getElementById("success-message");
+        successMessage.classList.remove("show");
+    }, 5000);
+
+    function startLoginProcess() {
+        document.getElementById('loadingSpinner').style.display = 'block';
+
+        // Antag att `login` är funktionen som hanterar inloggningsprocessen.
+        login().then(() => {
+            document.getElementById('loadingSpinner').style.display = 'none';
+        });
+    }
+    window.addEventListener("load", function () {
+        var successMessage = document.getElementById("success-message");
+        successMessage.classList.add("show");
+    });
+    const arrow = document.querySelector('#totop-arrow');
+    arrow.addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    function toggleLanguage() {
+        var toggleBtn = document.getElementById('languageToggleBtn');
+        var contactForm = document.getElementById('contactForm');
+        var contactFormSv = document.getElementById('contactFormSv');
+
+        if (toggleBtn.innerText === 'Svenska') {
+            toggleBtn.innerText = 'English';
+            contactForm.style.display = 'none';
+            contactFormSv.style.display = 'block';
+        } else {
+            toggleBtn.innerText = 'Svenska';
+            contactForm.style.display = 'block';
+            contactFormSv.style.display = 'none';
+        }
+    }
+
+
+
+    var dimensionIndex = 0; // Initialiserar dimensionIndex här
+
+    function addDimension() {
+        var language = document.getElementById('languageToggleBtn').innerText;
+        var isSwedish = language.includes('Svenska');
+
+        var containerId = isSwedish ? 'dimensionsContainerEn' : 'dimensionsContainerSv';
+        var container = document.getElementById(containerId);
+
+        var placeholders = isSwedish ? {
+            packageId: "Package ID",
+            marksNumbers: "Marks Numbers",
+            description: "Description",
+            packageType: "Package Type",
+            pcs: "Number of pieces",
+            length: "Length",
+            width: "Width",
+            height: "Height",
+            weight: "Weight",
+            volume: "Volume",
+            grossWeight: "Gross Weight",
+            remarks: "Remarks",
+            removeBtn: "Remove"
+
+        } : {
+            packageId: "PaketID",
+            marksNumbers: "Märkningsnummer",
+            description: "Beskrivning",
+            packageType: "Pakettyp",
+            pcs: "Antal stycken",
+            length: "Längd",
+            width: "Bredd",
+            height: "Höjd",
+            weight: "Vikt",
+            volume: "Volym",
+            grossWeight: "Bruttovikt",
+            remarks: "Anmärkningar",
+            removeBtn: "Ta bort"
+        };
+
+        var dimensionHTML = `
+                <div id="dimension-${dimensionIndex}" class="dimension-container">
+                        <input type="text" name="Order.Goods[${dimensionIndex}].PackageId" placeholder="${placeholders.packageId}" class="form-control" />
+                        <input type="text" name="Order.Goods[${dimensionIndex}].MarksNumbers" placeholder="${placeholders.marksNumbers}" class="form-control" />
+                        <textarea name="Order.Goods[${dimensionIndex}].Description" placeholder="${placeholders.description}" class="form-control"></textarea>
+                        <select name="Order.Goods[${dimensionIndex}].PackageType" class="form-control">
+                        <option value="">Select a package type</option>
+                        <option value="CTN">CTN - Carton</option>
+                        <option value="HPX">HPX - Special packaging</option>
+                        <option value="KVT">KVT - Custom type</option>
+                        <option value="OTH">OTH - Other</option>
+                        <option value="PKG">PKG - Package</option>
+                        <option value="PX">PX - Special packaging X</option>
+                    </select>
+                        <input type="number" name="Order.Goods[${dimensionIndex}].Quantity" placeholder="${placeholders.pcs}" class="form-control" />
+                        <input type="number" name="Order.Goods[${dimensionIndex}].Length" placeholder="${placeholders.length}" class="form-control" />
+                        <input type="number" name="Order.Goods[${dimensionIndex}].Width" placeholder="${placeholders.width}" class="form-control" />
+                        <input type="number" name="Order.Goods[${dimensionIndex}].Height" placeholder="${placeholders.height}" class="form-control" />
+                        <input type="number" name="Order.Goods[${dimensionIndex}].NetWeight" placeholder="${placeholders.weight}" class="form-control" />
+                        <input type="number" name="Order.Goods[${dimensionIndex}].Volume" placeholder="${placeholders.volume}" class="form-control" />
+                        <input type="number" name="Order.Goods[${dimensionIndex}].GrossWeight" placeholder="${placeholders.grossWeight}" class="form-control" />
+                        <textarea name="Order.Goods[${dimensionIndex}].Remarks" placeholder="${placeholders.remarks}" class="form-control"></textarea>
+                    <button type="button" class="cta-button" onclick="removeDimension(${dimensionIndex})">${placeholders.removeBtn}</button>
+                </div>
+            `;
+
+        container.insertAdjacentHTML('beforeend', dimensionHTML);
+        dimensionIndex++; // Increment dimensionIndex for each new dimension
+    }
+
+
+    function removeDimension(index) {
+        var element = document.getElementById('dimension-' + index);
+        if (element) {
+            element.remove();
+        }
+    }
+
+    // Räkna antalet befintliga dimension-container element när sidan laddas
+    window.onload = function () {
+        var existingGoods = document.querySelectorAll('.dimension-container').length;
+        dimensionIndex = existingGoods; // Startar dimensionIndex efter befintliga "Goods"
+    };
+
+
+
+</script>

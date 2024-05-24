@@ -15,18 +15,34 @@ using MasterKinder.Data;
 using CsvHelper.TypeConversion;
 using EFCore.BulkExtensions;
 
+using Azure.Storage.Blobs;
+using CsvHelper;
+using CsvHelper.Configuration;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using Azure.Storage.Blobs.Models;
+using MasterKinder.Models;
+using MasterKinder.Data;
+using CsvHelper.TypeConversion;
+using Microsoft.EntityFrameworkCore;
+
 public class CsvService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<CsvService> _logger;
-    private readonly AppDbContext _context;
     private readonly string _blobUri;
-
-    public CsvService(IServiceProvider serviceProvider, ILogger<CsvService> logger, AppDbContext context, IConfiguration configuration)
+    private readonly AppDbContext _context;
+    public CsvService(IServiceProvider serviceProvider, ILogger<CsvService> logger, IConfiguration configuration, AppDbContext context)
     {
+        _context = context;
         _serviceProvider = serviceProvider;
         _logger = logger;
-        _context = context;
         _blobUri = configuration["BlobUri"];
     }
 
@@ -92,11 +108,11 @@ public class CsvService
     {
         using (var scope = _serviceProvider.CreateScope())
         {
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             try
             {
-                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                context.SurveyResponses.AddRange(batch);
-                await context.SaveChangesAsync();
+                context.Database.SetCommandTimeout(600); // Increase command timeout to 600 seconds
+                await context.BulkInsertAsync(batch);
                 _logger.LogInformation($"Inserted batch of {batch.Count} records, total records inserted: {totalRecords}");
             }
             catch (Exception ex)
@@ -108,76 +124,89 @@ public class CsvService
 
     public List<string> GetForskoleverksamheter()
     {
-        return _context.SurveyResponses
-            .Select(sr => sr.Forskoleverksamhet)
-            .Distinct()
-            .ToList();
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            return context.SurveyResponses
+                .Select(sr => sr.Forskoleverksamhet)
+                .Distinct()
+                .ToList();
+        }
     }
 
     public List<string> GetQuestions()
     {
-        return _context.SurveyResponses
-            .Select(sr => sr.Fragetext)
+        var questions = _context.SurveyResponses
+            .Select(sr => sr.Fragetext.Trim())
             .Distinct()
             .ToList();
+
+        _logger.LogInformation($"Retrieved Questions: {string.Join(", ", questions)}");
+
+        return questions;
     }
+
 
     public Dictionary<string, double> CalculateResponsePercentages(string questionText, string forskoleverksamhet)
     {
-        var query = _context.SurveyResponses.AsQueryable();
-
-        if (!string.IsNullOrEmpty(forskoleverksamhet))
+        using (var scope = _serviceProvider.CreateScope())
         {
-            query = query.Where(sr => sr.Forskoleverksamhet == forskoleverksamhet);
-        }
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var query = context.SurveyResponses.AsQueryable();
 
-        var totalResponses = query
-            .Where(sr => sr.Fragetext == questionText)
-            .Sum(sr => sr.Utfall);
-
-        if (totalResponses == 0)
-        {
-            _logger.LogInformation($"No responses found for question '{questionText}' with forskoleverksamhet '{forskoleverksamhet}'");
-            return new Dictionary<string, double>();
-        }
-
-        var responseCounts = query
-            .Where(sr => sr.Fragetext == questionText)
-            .GroupBy(sr => sr.SvarsalternativText)
-            .Select(g => new
+            if (!string.IsNullOrEmpty(forskoleverksamhet))
             {
-                Response = g.Key,
-                Count = g.Sum(sr => sr.Utfall)
-            })
-            .ToList();
-
-        _logger.LogInformation($"Total responses for '{questionText}' with forskoleverksamhet '{forskoleverksamhet}': {totalResponses}");
-        foreach (var response in responseCounts)
-        {
-            _logger.LogInformation($"Response: {response.Response}, Count: {response.Count}");
-        }
-
-        var responsePercentages = new Dictionary<string, double>();
-
-        foreach (var response in responseCounts)
-        {
-            var key = GetResponseText(response.Response);
-            if (responsePercentages.ContainsKey(key))
-            {
-                responsePercentages[key] += (double)response.Count / totalResponses * 100;
+                query = query.Where(sr => sr.Forskoleverksamhet == forskoleverksamhet);
             }
-            else
+
+            var totalResponses = query
+                .Where(sr => sr.Fragetext == questionText)
+                .Sum(sr => sr.Utfall);
+
+            if (totalResponses == 0)
             {
-                responsePercentages[key] = (double)response.Count / totalResponses * 100;
+                _logger.LogInformation($"No responses found for question '{questionText}' with forskoleverksamhet '{forskoleverksamhet}'");
+                return new Dictionary<string, double>();
             }
-        }
 
-        foreach (var response in responsePercentages)
-        {
-            _logger.LogInformation($"Response: {response.Key}, Percentage: {response.Value}%");
-        }
+            var responseCounts = query
+                .Where(sr => sr.Fragetext == questionText)
+                .GroupBy(sr => sr.SvarsalternativText)
+                .Select(g => new
+                {
+                    Response = g.Key,
+                    Count = g.Sum(sr => sr.Utfall)
+                })
+                .ToList();
 
-        return responsePercentages;
+            _logger.LogInformation($"Total responses for '{questionText}' with forskoleverksamhet '{forskoleverksamhet}': {totalResponses}");
+            foreach (var response in responseCounts)
+            {
+                _logger.LogInformation($"Response: {response.Response}, Count: {response.Count}");
+            }
+
+            var responsePercentages = new Dictionary<string, double>();
+
+            foreach (var response in responseCounts)
+            {
+                var key = GetResponseText(response.Response);
+                if (responsePercentages.ContainsKey(key))
+                {
+                    responsePercentages[key] += (double)response.Count / totalResponses * 100;
+                }
+                else
+                {
+                    responsePercentages[key] = (double)response.Count / totalResponses * 100;
+                }
+            }
+
+            foreach (var response in responsePercentages)
+            {
+                _logger.LogInformation($"Response: {response.Key}, Percentage: {response.Value}%");
+            }
+
+            return responsePercentages;
+        }
     }
 
     private string GetResponseText(string response)
@@ -199,67 +228,97 @@ public class CsvService
 
     public double CalculateSpecificResponsePercentage(string questionText, string responseText, string forskoleverksamhet)
     {
-        var query = _context.SurveyResponses.AsQueryable();
-
-        if (!string.IsNullOrEmpty(forskoleverksamhet))
+        using (var scope = _serviceProvider.CreateScope())
         {
-            query = query.Where(sr => sr.Forskoleverksamhet == forskoleverksamhet);
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var query = context.SurveyResponses.AsQueryable();
+
+            if (!string.IsNullOrEmpty(forskoleverksamhet))
+            {
+                query = query.Where(sr => sr.Forskoleverksamhet == forskoleverksamhet);
+            }
+
+            var totalResponses = query
+                .Where(sr => sr.Fragetext == questionText)
+                .Sum(sr => sr.Utfall);
+
+            if (totalResponses == 0)
+            {
+                return 0;
+            }
+
+            var specificResponseCount = query
+                .Where(sr => sr.Fragetext == questionText && sr.SvarsalternativText == responseText)
+                .Sum(sr => sr.Utfall);
+
+            return (double)specificResponseCount / totalResponses * 100;
         }
-
-        var totalResponses = query
-            .Where(sr => sr.Fragetext == questionText)
-            .Sum(sr => sr.Utfall);
-
-        if (totalResponses == 0)
-        {
-            return 0;
-        }
-
-        var specificResponseCount = query
-            .Where(sr => sr.Fragetext == questionText && sr.SvarsalternativText == responseText)
-            .Sum(sr => sr.Utfall);
-
-        return (double)specificResponseCount / totalResponses * 100;
     }
 
     public double CalculateOverallSatisfactionPercentage(string questionText, string forskoleverksamhet)
     {
-        var query = _context.SurveyResponses.AsQueryable();
-
-        if (!string.IsNullOrEmpty(forskoleverksamhet))
+        using (var scope = _serviceProvider.CreateScope())
         {
-            query = query.Where(sr => sr.Forskoleverksamhet == forskoleverksamhet);
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var query = context.SurveyResponses.AsQueryable();
+
+            if (!string.IsNullOrEmpty(forskoleverksamhet))
+            {
+                query = query.Where(sr => sr.Forskoleverksamhet == forskoleverksamhet);
+            }
+
+            var totalResponses = query
+                .Where(sr => sr.Fragetext == questionText)
+                .Sum(sr => sr.Utfall);
+
+            if (totalResponses == 0)
+            {
+                return 0;
+            }
+
+            var satisfiedResponses = query
+                .Where(sr => sr.Fragetext == questionText && sr.GraderingSvarsalternativ == "Nöjd")
+                .Sum(sr => sr.Utfall);
+
+            return (double)satisfiedResponses / totalResponses * 100;
         }
-
-        var totalResponses = query
-            .Where(sr => sr.Fragetext == questionText)
-            .Sum(sr => sr.Utfall);
-
-        if (totalResponses == 0)
-        {
-            return 0;
-        }
-
-        var satisfiedResponses = query
-            .Where(sr => sr.Fragetext == questionText && sr.GraderingSvarsalternativ == "Nöjd")
-            .Sum(sr => sr.Utfall);
-
-        return (double)satisfiedResponses / totalResponses * 100;
     }
 
     public Dictionary<string, int> CountResponsesByGender(string forskoleverksamhet)
     {
-        var query = _context.SurveyResponses.AsQueryable();
-
-        if (!string.IsNullOrEmpty(forskoleverksamhet))
+        using (var scope = _serviceProvider.CreateScope())
         {
-            query = query.Where(sr => sr.Forskoleverksamhet == forskoleverksamhet);
-        }
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var query = context.SurveyResponses.AsQueryable();
 
-        return query
-            .GroupBy(sr => sr.Kon)
-            .Select(g => new { Gender = g.Key, Count = g.Sum(sr => sr.Utfall) })
-            .ToDictionary(g => g.Gender, g => g.Count);
+            if (!string.IsNullOrEmpty(forskoleverksamhet))
+            {
+                query = query.Where(sr => sr.Forskoleverksamhet == forskoleverksamhet);
+            }
+
+            return query
+                .GroupBy(sr => sr.Kon)
+                .Select(g => new { Gender = g.Key, Count = g.Sum(sr => sr.Utfall) })
+                .ToDictionary(g => g.Gender, g => g.Count);
+        }
+    }
+
+    public int CountTotalResponses(string questionText, string forskoleverksamhet)
+    {
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var query = context.SurveyResponses.AsQueryable();
+
+            if (!string.IsNullOrEmpty(forskoleverksamhet))
+            {
+                query = query.Where(sr => sr.Forskoleverksamhet == forskoleverksamhet);
+            }
+
+            return query
+                .Where(sr => sr.Fragetext == questionText)
+                .Sum(sr => sr.Utfall);
+        }
     }
 }
 

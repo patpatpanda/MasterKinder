@@ -94,3 +94,44 @@ form {
     .table tr:hover {
         background: #ddd;
     }
+.spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border-top-color: #09f; /* Ändrad från left till top för synlighet */
+    background: #b8d8f5; /* Lägger till en subtil gradient */
+    animation: spin 1s ease infinite, pulse 2s infinite alternate;
+    box-shadow: 0 0 20px rgba(0, 153, 255, 0.5); /* Lägger till en lysande skugga */
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 10px rgba(0, 153, 255, 0.5);
+    }
+
+    100% {
+        box-shadow: 0 0 20px rgba(0, 153, 255, 1);
+    }
+}
+.cta-button-5 {
+    display: inline-block;
+    margin: 5px;
+    padding: 18px 34px; /* Ökad padding för större knapp */
+    background-color: #b8d8f5; /* Subtil blå färg för knapparna */
+    color: #2c3e50; /* Mörkblå text för kontrast */
+    text-decoration: none;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+    font-size: 18px; /* Större textstorlek */
+}
