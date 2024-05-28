@@ -38,8 +38,8 @@ namespace MasterKinder.Pages
 
         public async Task<IActionResult> OnGetAsync()
         {
-            Questions = _csvService.GetQuestions();
-            Forskoleverksamheter = _csvService.GetForskoleverksamheter();
+            Questions = await _csvService.GetQuestionsAsync();
+            Forskoleverksamheter = await _csvService.GetForskoleverksamheterAsync();
             // Ensure initial load does not trigger search result message
             SelectedQuestion = null;
             SelectedForskoleverksamhet = null;
@@ -49,12 +49,12 @@ namespace MasterKinder.Pages
             return Page();
         }
 
-        public IActionResult OnPostSelectQuestion()
+        public async Task<IActionResult> OnPostSelectQuestionAsync()
         {
-            Questions = _csvService.GetQuestions();
-            Forskoleverksamheter = _csvService.GetForskoleverksamheter();
-            ResponsePercentages = _csvService.CalculateResponsePercentages(SelectedQuestion, SelectedForskoleverksamhet);
-            TotalResponses = _csvService.CountTotalResponses(SelectedQuestion, SelectedForskoleverksamhet);
+            Questions = await _csvService.GetQuestionsAsync();
+            Forskoleverksamheter = await _csvService.GetForskoleverksamheterAsync();
+            ResponsePercentages = await _csvService.CalculateResponsePercentagesAsync(SelectedQuestion, SelectedForskoleverksamhet);
+            TotalResponses = await _csvService.CountTotalResponsesAsync(SelectedQuestion, SelectedForskoleverksamhet);
             SearchPerformed = true; // Search has been performed
 
             _logger.LogInformation($"SelectedQuestion: {SelectedQuestion}, SelectedForskoleverksamhet: {SelectedForskoleverksamhet}");

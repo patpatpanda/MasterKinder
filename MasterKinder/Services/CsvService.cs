@@ -13,24 +13,9 @@ using Azure.Storage.Blobs.Models;
 using MasterKinder.Models;
 using MasterKinder.Data;
 using CsvHelper.TypeConversion;
-using EFCore.BulkExtensions;
-
-using Azure.Storage.Blobs;
-using CsvHelper;
-using CsvHelper.Configuration;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using Azure.Storage.Blobs.Models;
-using MasterKinder.Models;
-using MasterKinder.Data;
-using CsvHelper.TypeConversion;
 using Microsoft.EntityFrameworkCore;
+using EFCore.BulkExtensions;
+using Microsoft.Extensions.Caching.Memory;
 
 public class CsvService
 {
@@ -38,13 +23,16 @@ public class CsvService
     private readonly ILogger<CsvService> _logger;
     private readonly string _blobUri;
     private readonly AppDbContext _context;
-    public CsvService(IServiceProvider serviceProvider, ILogger<CsvService> logger, IConfiguration configuration, AppDbContext context)
+    private readonly IMemoryCache _cache;
+    public CsvService(IMemoryCache cache, IServiceProvider serviceProvider, ILogger<CsvService> logger, IConfiguration configuration, AppDbContext context)
     {
+        _cache = cache;
         _context = context;
         _serviceProvider = serviceProvider;
         _logger = logger;
         _blobUri = configuration["BlobUri"];
     }
+
 
     public async Task LoadCsvToDatabaseAsync()
     {
@@ -122,32 +110,27 @@ public class CsvService
         }
     }
 
-    public List<string> GetForskoleverksamheter()
+    public async Task<List<string>> GetForskoleverksamheterAsync()
     {
         using (var scope = _serviceProvider.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            return context.SurveyResponses
+            return await context.SurveyResponses
                 .Select(sr => sr.Forskoleverksamhet)
                 .Distinct()
-                .ToList();
+                .ToListAsync();
         }
     }
 
-    public List<string> GetQuestions()
+    public async Task<List<string>> GetQuestionsAsync()
     {
-        var questions = _context.SurveyResponses
+        return await _context.SurveyResponses
             .Select(sr => sr.Fragetext.Trim())
             .Distinct()
-            .ToList();
-
-        _logger.LogInformation($"Retrieved Questions: {string.Join(", ", questions)}");
-
-        return questions;
+            .ToListAsync();
     }
 
-
-    public Dictionary<string, double> CalculateResponsePercentages(string questionText, string forskoleverksamhet)
+    public async Task<Dictionary<string, double>> CalculateResponsePercentagesAsync(string questionText, string forskoleverksamhet)
     {
         using (var scope = _serviceProvider.CreateScope())
         {
@@ -159,9 +142,9 @@ public class CsvService
                 query = query.Where(sr => sr.Forskoleverksamhet == forskoleverksamhet);
             }
 
-            var totalResponses = query
+            var totalResponses = await query
                 .Where(sr => sr.Fragetext == questionText)
-                .Sum(sr => sr.Utfall);
+                .SumAsync(sr => sr.Utfall);
 
             if (totalResponses == 0)
             {
@@ -169,7 +152,7 @@ public class CsvService
                 return new Dictionary<string, double>();
             }
 
-            var responseCounts = query
+            var responseCounts = await query
                 .Where(sr => sr.Fragetext == questionText)
                 .GroupBy(sr => sr.SvarsalternativText)
                 .Select(g => new
@@ -177,7 +160,7 @@ public class CsvService
                     Response = g.Key,
                     Count = g.Sum(sr => sr.Utfall)
                 })
-                .ToList();
+                .ToListAsync();
 
             _logger.LogInformation($"Total responses for '{questionText}' with forskoleverksamhet '{forskoleverksamhet}': {totalResponses}");
             foreach (var response in responseCounts)
@@ -209,6 +192,7 @@ public class CsvService
         }
     }
 
+
     private string GetResponseText(string response)
     {
         var responseMapping = new Dictionary<string, string>
@@ -226,7 +210,7 @@ public class CsvService
         return responseMapping.ContainsKey(response) ? responseMapping[response] : response;
     }
 
-    public double CalculateSpecificResponsePercentage(string questionText, string responseText, string forskoleverksamhet)
+    public async Task<double> CalculateSpecificResponsePercentageAsync(string questionText, string responseText, string forskoleverksamhet)
     {
         using (var scope = _serviceProvider.CreateScope())
         {
@@ -238,24 +222,24 @@ public class CsvService
                 query = query.Where(sr => sr.Forskoleverksamhet == forskoleverksamhet);
             }
 
-            var totalResponses = query
+            var totalResponses = await query
                 .Where(sr => sr.Fragetext == questionText)
-                .Sum(sr => sr.Utfall);
+                .SumAsync(sr => sr.Utfall);
 
             if (totalResponses == 0)
             {
                 return 0;
             }
 
-            var specificResponseCount = query
+            var specificResponseCount = await query
                 .Where(sr => sr.Fragetext == questionText && sr.SvarsalternativText == responseText)
-                .Sum(sr => sr.Utfall);
+                .SumAsync(sr => sr.Utfall);
 
             return (double)specificResponseCount / totalResponses * 100;
         }
     }
 
-    public double CalculateOverallSatisfactionPercentage(string questionText, string forskoleverksamhet)
+    public async Task<double> CalculateOverallSatisfactionPercentageAsync(string questionText, string forskoleverksamhet)
     {
         using (var scope = _serviceProvider.CreateScope())
         {
@@ -267,24 +251,24 @@ public class CsvService
                 query = query.Where(sr => sr.Forskoleverksamhet == forskoleverksamhet);
             }
 
-            var totalResponses = query
+            var totalResponses = await query
                 .Where(sr => sr.Fragetext == questionText)
-                .Sum(sr => sr.Utfall);
+                .SumAsync(sr => sr.Utfall);
 
             if (totalResponses == 0)
             {
                 return 0;
             }
 
-            var satisfiedResponses = query
+            var satisfiedResponses = await query
                 .Where(sr => sr.Fragetext == questionText && sr.GraderingSvarsalternativ == "Nöjd")
-                .Sum(sr => sr.Utfall);
+                .SumAsync(sr => sr.Utfall);
 
             return (double)satisfiedResponses / totalResponses * 100;
         }
     }
 
-    public Dictionary<string, int> CountResponsesByGender(string forskoleverksamhet)
+    public async Task<Dictionary<string, int>> CountResponsesByGenderAsync(string forskoleverksamhet)
     {
         using (var scope = _serviceProvider.CreateScope())
         {
@@ -296,14 +280,14 @@ public class CsvService
                 query = query.Where(sr => sr.Forskoleverksamhet == forskoleverksamhet);
             }
 
-            return query
+            return await query
                 .GroupBy(sr => sr.Kon)
                 .Select(g => new { Gender = g.Key, Count = g.Sum(sr => sr.Utfall) })
-                .ToDictionary(g => g.Gender, g => g.Count);
+                .ToDictionaryAsync(g => g.Gender, g => g.Count);
         }
     }
 
-    public int CountTotalResponses(string questionText, string forskoleverksamhet)
+    public async Task<int> CountTotalResponsesAsync(string questionText, string forskoleverksamhet)
     {
         using (var scope = _serviceProvider.CreateScope())
         {
@@ -315,13 +299,12 @@ public class CsvService
                 query = query.Where(sr => sr.Forskoleverksamhet == forskoleverksamhet);
             }
 
-            return query
+            return await query
                 .Where(sr => sr.Fragetext == questionText)
-                .Sum(sr => sr.Utfall);
+                .SumAsync(sr => sr.Utfall);
         }
     }
 }
-
 
 public class SurveyResponseMap : ClassMap<SurveyResponse>
 {

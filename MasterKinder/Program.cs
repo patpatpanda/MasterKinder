@@ -10,6 +10,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultSQLConnection")));
 
 builder.Services.AddScoped<CsvService>();
+builder.Services.AddSingleton<MasterKinder.Services.AuthService>();
+builder.Services.AddSingleton<MasterKinder.Services.PowerBIService>();
 var app = builder.Build();
 
 // Load CSV Data

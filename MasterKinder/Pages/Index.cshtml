@@ -4,19 +4,19 @@
     ViewData["Title"] = "Survey Responses";
 }
 
-<h2>Fråga mig om förskola (2023)</h2>
+<h5>Fråga mig om förskola (2023)</h5>
 
 <form method="post">
     <div>
         <label for="questionSelect">Select Question:</label>
         <select id="questionSelect" name="SelectedQuestion" asp-for="SelectedQuestion" asp-items="@(new SelectList(Model.Questions))">
-            <option value="">-- Select a question --</option> <!-- Added default empty option -->
+            <option value="">-- Select a question --</option>
         </select>
     </div>
     <div>
         <label for="forskoleverksamhetSelect">Select Förskoleverksamhet:</label>
         <select id="forskoleverksamhetSelect" name="SelectedForskoleverksamhet" asp-for="SelectedForskoleverksamhet" asp-items="@(new SelectList(Model.Forskoleverksamheter))">
-            <option value="">-- Select Förskoleverksamhet --</option> <!-- Added default empty option -->
+            <option value="">-- Select Förskoleverksamhet --</option>
         </select>
     </div>
     <div class="sleep">
@@ -28,9 +28,9 @@
     </div>
 </form>
 
-
 @if (Model.SearchPerformed)
 {
+    <h5>Antal svar: @Model.TotalResponses</h5>
     @if (Model.ResponsePercentages != null && Model.ResponsePercentages.Any())
     {
         <table class="table">
