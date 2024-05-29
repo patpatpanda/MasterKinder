@@ -61,6 +61,11 @@ namespace MasterKinder.Pages
             _logger.LogInformation($"ResponsePercentages count: {ResponsePercentages.Count}");
             _logger.LogInformation($"TotalResponses: {TotalResponses}");
 
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Partial("ResultPartial", this);
+            }
+
             return Page();
         }
     }

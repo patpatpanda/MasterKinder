@@ -5,18 +5,19 @@
 }
 
 <h5>Fråga mig om förskola (2023)</h5>
-<div>
-    <input id="address" type="textbox" placeholder="Enter your address" value="Sergels torg 1, 111 57 Stockholm, Sverige">
-    <input type="button" value="Find Preschools" onclick="geocodeAddress(new google.maps.Geocoder(), map)">
+<div class="input-container">
+    <input id="address" type="text" class="styled-input" placeholder="Enter your address" value="Sergels torg 1, 111 57 Stockholm, Sverige">
+    <input type="button" class="styled-button" value="Find Preschools" onclick="geocodeAddress(new google.maps.Geocoder(), map)">
 </div>
+
 
 <div class="map-container">
     <div id="map"></div>
     <div id="right-panel"></div>
 </div>
 
-<form method="post">
-    <div>
+<form id="searchForm" method="post">
+    <div style="margin-top:20px">
         <label for="questionSelect">Select Question:</label>
         <select id="questionSelect" name="SelectedQuestion" asp-for="SelectedQuestion" asp-items="@(new SelectList(Model.Questions))">
             <option value="">-- Select a question --</option>
@@ -33,40 +34,33 @@
             <div class="spinner"></div>
         </div>
 
-        <button id="loginButton" onclick="startLoginProcess()" type="submit" asp-page-handler="SelectQuestion">Sök</button>
+        <button id="loginButton" type="submit">Sök</button>
     </div>
 </form>
 
-@if (Model.SearchPerformed)
-{
-    <h5>Antal svar: @Model.TotalResponses</h5>
-    @if (Model.ResponsePercentages != null && Model.ResponsePercentages.Any())
-    {
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Resultat</th>
-                    <th>Procent</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var response in Model.ResponsePercentages)
-                {
-                    <tr>
-                        <td>@response.Key</td>
-                        <td>@string.Format("{0:0.00} %", response.Value)</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-    else
-    {
-        <p>No data available for the selected question and förskoleverksamhet.</p>
-    }
-}
+<div id="results">
+    @await Html.PartialAsync("Shared/ResultPartial", Model)
+</div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+    $(document).ready(function () {
+        $('#searchForm').on('submit', function (event) {
+            event.preventDefault();
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Page("/Index", "SelectQuestion")',
+                data: $(this).serialize(),
+                success: function (result) {
+                    $('#results').html(result);
+                },
+                error: function (xhr, status, error) {
+                    alert('An error occurred: ' + error);
+                }
+            });
+        });
+    });
+
     var map;
     var service;
     var infowindow;
@@ -163,3 +157,5 @@
         });
     }
 </script>
+
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCbJmqNnZHTZ99pPQ2uHfkDXwpMxOpfYLw&libraries=places,directions&callback=initMap"></script>

@@ -33,17 +33,24 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    background-image: url('/images/kinder.webp');
+    width: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    
 }
 
 .container {
-    max-width: 800px;
+    max-width: 850px;
     margin: 50px auto;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(153, 233, 233, 0.1);
     padding: 20px;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(30px);
     border: 1px solid rgba(255, 255, 255, 0.3);
+    color:#fff;
 }
 
 h4, h3 {
@@ -161,15 +168,90 @@ form {
     transition: all 0.3s ease;
     font-size: 18px;
 }
+
+.map-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
 #map {
     height: 500px;
     width: 70%;
-    float: left;
 }
 
 #right-panel {
-    width: 28%;
-    float: left;
+    width: 35%;
     margin-left: 2%;
     overflow: auto;
+    background-color: rgba(255, 255, 255, 0.8); /* Light background for better readability */
+    color: #000; /* Dark text for better contrast */
+    padding: 10px; /* Padding for better spacing */
+    border-radius: 5px; /* Rounded corners */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Slight shadow for better distinction */
+}
+
+/* Gör layouten responsiv */
+@media (max-width: 768px) {
+    .map-container {
+        flex-direction: column;
+    }
+
+    #map, #right-panel {
+        width: 100%;
+        height: 300px;
+        margin: 0;
+    }
+
+    #right-panel {
+        height: auto;
+    }
+}
+
+.input-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 20px 0;
+}
+
+.styled-input {
+    width: 80%;
+    max-width: 400px;
+    padding: 10px 15px;
+    margin: 10px 0;
+    border: 2px solid #4CAF50;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.styled-input:focus {
+    border-color: #45a049;
+    outline: none;
+    box-shadow: 0 0 10px rgba(69, 160, 73, 0.5);
+}
+
+.styled-button {
+    width: 80%;
+    max-width: 400px;
+    padding: 10px 15px;
+    margin: 10px 0;
+    background-color: #4CAF50;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.styled-button:hover {
+    background-color: #45a049;
+}
+
+.styled-button:focus {
+    outline: none;
+    box-shadow: 0 0 10px rgba(69, 160, 73, 0.5);
 }
