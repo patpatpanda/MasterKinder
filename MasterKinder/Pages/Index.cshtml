@@ -6,8 +6,8 @@
 
 <h5>Fråga mig om förskola (2023)</h5>
 <div class="input-container">
-    <input id="address" type="text" class="styled-input" placeholder="Enter your address" value="Sergels torg 1, 111 57 Stockholm, Sverige">
-    <input type="button" class="styled-button" value="Find Preschools" onclick="geocodeAddress(new google.maps.Geocoder(), map)">
+    <input id="address" type="text" class="styled-input" placeholder="Ange din Address" value="Sergels torg 1, 111 57 Stockholm, Sverige">
+    <input type="button" class="styled-button" value="Hitta Förskolor" onclick="geocodeAddress(new google.maps.Geocoder(), map)">
 </div>
 
 
@@ -18,13 +18,13 @@
 
 <form id="searchForm" method="post">
     <div style="margin-top:20px">
-        <label for="questionSelect">Select Question:</label>
+        <label for="questionSelect">Välj Fråga:</label>
         <select id="questionSelect" name="SelectedQuestion" asp-for="SelectedQuestion" asp-items="@(new SelectList(Model.Questions))">
             <option value="">-- Select a question --</option>
         </select>
     </div>
     <div>
-        <label for="forskoleverksamhetSelect">Select Förskoleverksamhet:</label>
+        <label for="forskoleverksamhetSelect">Välj Förskoleverksamhet:</label>
         <select id="forskoleverksamhetSelect" name="SelectedForskoleverksamhet" asp-for="SelectedForskoleverksamhet" asp-items="@(new SelectList(Model.Forskoleverksamheter))">
             <option value="">-- Select Förskoleverksamhet --</option>
         </select>
