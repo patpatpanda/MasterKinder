@@ -1,29 +1,32 @@
-using Microsoft.Extensions.DependencyInjection;
 using MasterKinder.Data;
-using MasterKinder.Pages;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddControllers(); // Lägg till detta för att aktivera API-kontroller
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultSQLConnection"),
-    sqlServerOptionsAction: sqlOptions =>
-    {
-        sqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 5, // Max antal återförsök
-            maxRetryDelay: TimeSpan.FromSeconds(30), // Maximal fördröjning mellan återförsök
-            errorNumbersToAdd: null // Felnummer att inkludera i återförsök
-        );
-    }));
-
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultSQLConnection")));
 builder.Services.AddScoped<CsvService>();
 builder.Services.AddSingleton<MasterKinder.Services.AuthService>();
 builder.Services.AddSingleton<MasterKinder.Services.PowerBIService>();
 
-var app = builder.Build();
+// Add CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", builder =>
+    {
+        builder.AllowAnyOrigin()
+               .AllowAnyMethod()
+               .AllowAnyHeader();
+    });
+});
 
-// Load CSV Data
+
+
+
+var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -32,14 +35,16 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-// https://virki.se/
 app.UseHttpsRedirection();
-app.UseStaticFiles();
-
+app.UseStaticFiles(); // Serve static files from wwwroot
 app.UseRouting();
-
+app.UseCors("AllowAll");
 app.UseAuthorization();
 
 app.MapRazorPages();
+app.MapControllers(); // Lägg till detta för att aktivera API-routes
+
+// Serve the React app's index.html as a fallback for all other routes
+app.MapFallbackToFile("index.html");
 
 app.Run();
