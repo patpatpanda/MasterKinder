@@ -3,11 +3,18 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+
+
+
+
 // Add services to the container.
 builder.Services.AddRazorPages();
-builder.Services.AddControllers(); // Lägg till detta för att aktivera API-kontroller
+builder.Services.AddControllers(); // Enable API controllers
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultSQLConnection")));
+builder.Services.AddMemoryCache(); // Lägg till denna rad för att registrera IMemoryCache
 builder.Services.AddScoped<CsvService>();
 builder.Services.AddSingleton<MasterKinder.Services.AuthService>();
 builder.Services.AddSingleton<MasterKinder.Services.PowerBIService>();
@@ -22,9 +29,6 @@ builder.Services.AddCors(options =>
                .AllowAnyHeader();
     });
 });
-
-
-
 
 var app = builder.Build();
 
@@ -41,10 +45,9 @@ app.UseRouting();
 app.UseCors("AllowAll");
 app.UseAuthorization();
 
-app.MapRazorPages();
-app.MapControllers(); // Lägg till detta för att aktivera API-routes
+app.MapControllers(); // Enable API routes
 
 // Serve the React app's index.html as a fallback for all other routes
-app.MapFallbackToFile("index.html");
+app.MapFallbackToFile("/index.html");
 
 app.Run();
