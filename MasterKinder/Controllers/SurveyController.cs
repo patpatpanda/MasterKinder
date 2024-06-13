@@ -66,6 +66,21 @@ public class SurveyController : ControllerBase
             return StatusCode(500, "Internal server error");
         }
     }
+    [HttpGet("response-count")]
+    public async Task<IActionResult> GetResponseCount([FromQuery] string question, [FromQuery] string forskoleverksamhet)
+    {
+        try
+        {
+            var count = await _csvService.CountTotalResponsesAsync(question, forskoleverksamhet);
+            return Ok(new { count });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred while fetching the response count.");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
 }
 
 public class SurveyRequest

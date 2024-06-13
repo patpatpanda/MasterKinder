@@ -304,6 +304,7 @@ public class CsvService
                 .SumAsync(sr => sr.Utfall);
         }
     }
+
 }
 
 public class SurveyResponseMap : ClassMap<SurveyResponse>
