@@ -57,8 +57,8 @@ public class SurveyController : ControllerBase
     {
         try
         {
-            var responsePercentages = await _csvService.CalculateResponsePercentagesAsync(request.SelectedQuestion, request.SelectedForskoleverksamhet);
-            return Ok(responsePercentages);
+            var (responsePercentages, totalResponses) = await _csvService.CalculateResponsePercentagesAsync(request.SelectedQuestion, request.SelectedForskoleverksamhet);
+            return Ok(new { responsePercentages, totalResponses });
         }
         catch (Exception ex)
         {

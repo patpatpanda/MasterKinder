@@ -130,30 +130,42 @@ public class CsvService
             .ToListAsync();
     }
 
-    public async Task<Dictionary<string, double>> CalculateResponsePercentagesAsync(string questionText, string forskoleverksamhet)
+    public async Task<(Dictionary<string, double> responsePercentages, int totalResponses)> CalculateResponsePercentagesAsync(string questionText, string googlePlaceName)
     {
         using (var scope = _serviceProvider.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var query = context.SurveyResponses.AsQueryable();
 
-            if (!string.IsNullOrEmpty(forskoleverksamhet))
+            // Hämta alla forskoleverksamheter
+            var allForskoleverksamheter = await context.SurveyResponses
+                .Select(sr => sr.Forskoleverksamhet)
+                .Distinct()
+                .ToListAsync();
+
+            // Hitta den närmaste matchningen med Levenshtein-avstånd
+            string bestMatch = allForskoleverksamheter
+                .OrderBy(name => LevenshteinDistance(name.ToLower(), googlePlaceName.ToLower()))
+                .FirstOrDefault();
+
+            if (string.IsNullOrEmpty(bestMatch))
             {
-                query = query.Where(sr => sr.Forskoleverksamhet == forskoleverksamhet);
+                _logger.LogInformation($"No matching forskoleverksamhet found for Google place name '{googlePlaceName}'");
+                return (new Dictionary<string, double>(), 0);
             }
 
             var totalResponses = await query
-                .Where(sr => sr.Fragetext == questionText)
+                .Where(sr => sr.Forskoleverksamhet == bestMatch && sr.Fragetext == questionText)
                 .SumAsync(sr => sr.Utfall);
 
             if (totalResponses == 0)
             {
-                _logger.LogInformation($"No responses found for question '{questionText}' with forskoleverksamhet '{forskoleverksamhet}'");
-                return new Dictionary<string, double>();
+                _logger.LogInformation($"No responses found for question '{questionText}' with forskoleverksamhet '{bestMatch}'");
+                return (new Dictionary<string, double>(), 0);
             }
 
             var responseCounts = await query
-                .Where(sr => sr.Fragetext == questionText)
+                .Where(sr => sr.Forskoleverksamhet == bestMatch && sr.Fragetext == questionText)
                 .GroupBy(sr => sr.SvarsalternativText)
                 .Select(g => new
                 {
@@ -161,12 +173,6 @@ public class CsvService
                     Count = g.Sum(sr => sr.Utfall)
                 })
                 .ToListAsync();
-
-            _logger.LogInformation($"Total responses for '{questionText}' with forskoleverksamhet '{forskoleverksamhet}': {totalResponses}");
-            foreach (var response in responseCounts)
-            {
-                _logger.LogInformation($"Response: {response.Response}, Count: {response.Count}");
-            }
 
             var responsePercentages = new Dictionary<string, double>();
 
@@ -183,13 +189,40 @@ public class CsvService
                 }
             }
 
-            foreach (var response in responsePercentages)
-            {
-                _logger.LogInformation($"Response: {response.Key}, Percentage: {response.Value}%");
-            }
-
-            return responsePercentages;
+            return (responsePercentages, totalResponses);
         }
+    }
+
+
+
+    public static int LevenshteinDistance(string a, string b)
+    {
+        if (string.IsNullOrEmpty(a))
+            return string.IsNullOrEmpty(b) ? 0 : b.Length;
+
+        if (string.IsNullOrEmpty(b))
+            return a.Length;
+
+        var matrix = new int[a.Length + 1, b.Length + 1];
+
+        for (int i = 0; i <= a.Length; i++)
+            matrix[i, 0] = i;
+
+        for (int j = 0; j <= b.Length; j++)
+            matrix[0, j] = j;
+
+        for (int i = 1; i <= a.Length; i++)
+        {
+            for (int j = 1; j <= b.Length; j++)
+            {
+                var cost = (b[j - 1] == a[i - 1]) ? 0 : 1;
+                matrix[i, j] = Math.Min(
+                    Math.Min(matrix[i - 1, j] + 1, matrix[i, j - 1] + 1),
+                    matrix[i - 1, j - 1] + cost);
+            }
+        }
+
+        return matrix[a.Length, b.Length];
     }
 
 

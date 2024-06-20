@@ -53,8 +53,12 @@ namespace MasterKinder.Pages
         {
             Questions = await _csvService.GetQuestionsAsync();
             Forskoleverksamheter = await _csvService.GetForskoleverksamheterAsync();
-            ResponsePercentages = await _csvService.CalculateResponsePercentagesAsync(SelectedQuestion, SelectedForskoleverksamhet);
-            TotalResponses = await _csvService.CountTotalResponsesAsync(SelectedQuestion, SelectedForskoleverksamhet);
+
+            // Uppdaterad metodanrop
+            var (responsePercentages, totalResponses) = await _csvService.CalculateResponsePercentagesAsync(SelectedQuestion, SelectedForskoleverksamhet);
+            ResponsePercentages = responsePercentages;
+            TotalResponses = totalResponses;
+
             SearchPerformed = true; // Search has been performed
 
             _logger.LogInformation($"SelectedQuestion: {SelectedQuestion}, SelectedForskoleverksamhet: {SelectedForskoleverksamhet}");
