@@ -130,7 +130,7 @@ public class CsvService
             .ToListAsync();
     }
 
-    public async Task<(Dictionary<string, double> responsePercentages, int totalResponses)> CalculateResponsePercentagesAsync(string questionText, string googlePlaceName)
+    public async Task<(Dictionary<string, double> responsePercentages, int totalResponses, double helhetsomdome, double svarsfrekvens)> CalculateResponsePercentagesAsync(string questionText, string googlePlaceName)
     {
         using (var scope = _serviceProvider.CreateScope())
         {
@@ -151,7 +151,7 @@ public class CsvService
             if (string.IsNullOrEmpty(bestMatch))
             {
                 _logger.LogInformation($"No matching forskoleverksamhet found for Google place name '{googlePlaceName}'");
-                return (new Dictionary<string, double>(), 0);
+                return (new Dictionary<string, double>(), 0, 0, 0);
             }
 
             var totalResponses = await query
@@ -161,7 +161,7 @@ public class CsvService
             if (totalResponses == 0)
             {
                 _logger.LogInformation($"No responses found for question '{questionText}' with forskoleverksamhet '{bestMatch}'");
-                return (new Dictionary<string, double>(), 0);
+                return (new Dictionary<string, double>(), 0, 0, 0);
             }
 
             var responseCounts = await query
@@ -189,9 +189,21 @@ public class CsvService
                 }
             }
 
-            return (responsePercentages, totalResponses);
+            // Beräkna helhetsomdome
+            var helhetsomdome = responsePercentages.ContainsKey("Instämmer helt") ? responsePercentages["Instämmer helt"] : 0;
+
+            // Hämta det totala möjliga antalet svar för alla frågor för den forskoleverksamheten
+            var totalPossibleResponsesForAllQuestions = await context.SurveyResponses
+                .Where(sr => sr.Forskoleverksamhet == bestMatch)
+                .SumAsync(sr => sr.TotalVarde);
+
+            // Antalet svar för frågan dividerat med totala möjliga svar för alla frågor (för att approximera svarsfrekvensen)
+            var svarsfrekvens = totalPossibleResponsesForAllQuestions > 0 ? (double)totalResponses / totalPossibleResponsesForAllQuestions * 100 : 0;
+
+            return (responsePercentages, totalResponses, helhetsomdome, svarsfrekvens);
         }
     }
+
 
 
 
@@ -337,6 +349,58 @@ public class CsvService
                 .SumAsync(sr => sr.Utfall);
         }
     }
+    public async Task<PreschoolStatistics> GetPreschoolStatisticsAsync(string forskoleverksamhet)
+    {
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var query = context.SurveyResponses.AsQueryable();
+
+            if (!string.IsNullOrEmpty(forskoleverksamhet))
+            {
+                query = query.Where(sr => sr.Forskoleverksamhet == forskoleverksamhet);
+            }
+
+            var totalResponses = await query.SumAsync(sr => sr.Utfall);
+            var responseCounts = await query.GroupBy(sr => sr.SvarsalternativText)
+                                            .Select(g => new { Response = g.Key, Count = g.Sum(sr => sr.Utfall) })
+                                            .ToListAsync();
+            var responsePercentages = new Dictionary<string, double>();
+            foreach (var response in responseCounts)
+            {
+                responsePercentages[response.Response] = (double)response.Count / totalResponses * 100;
+            }
+
+            var helhetsomdome = responsePercentages.ContainsKey("5") ? responsePercentages["5"] : 0;
+            var svarsfrekvens = await context.SurveyResponses
+                                             .Where(sr => sr.Forskoleverksamhet == forskoleverksamhet)
+                                             .Select(sr => sr.TotalVarde)
+                                             .FirstOrDefaultAsync();
+            var antalBarn = await context.SurveyResponses
+                                         .Where(sr => sr.Forskoleverksamhet == forskoleverksamhet)
+                                         .Select(sr => sr.TotalVarde_ExklVetEj)
+                                         .FirstOrDefaultAsync();
+
+            return new PreschoolStatistics
+            {
+                TotalResponses = totalResponses,
+                ResponsePercentages = responsePercentages,
+                Helhetsomdome = helhetsomdome,
+                Svarsfrekvens = svarsfrekvens,
+                AntalBarn = antalBarn
+            };
+        }
+    }
+
+    public class PreschoolStatistics
+    {
+        public int TotalResponses { get; set; }
+        public Dictionary<string, double> ResponsePercentages { get; set; }
+        public double Helhetsomdome { get; set; }
+        public double Svarsfrekvens { get; set; }
+        public int AntalBarn { get; set; }
+    }
+
 
 }
 

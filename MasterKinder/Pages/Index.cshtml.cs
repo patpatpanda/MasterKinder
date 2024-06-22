@@ -34,6 +34,10 @@ namespace MasterKinder.Pages
 
         public int TotalResponses { get; set; }
 
+        public double Helhetsomdome { get; set; }
+
+        public double Svarsfrekvens { get; set; }
+
         public bool SearchPerformed { get; set; }
 
         public async Task<IActionResult> OnGetAsync()
@@ -45,6 +49,8 @@ namespace MasterKinder.Pages
             SelectedForskoleverksamhet = null;
             ResponsePercentages = null;
             TotalResponses = 0;
+            Helhetsomdome = 0;
+            Svarsfrekvens = 0;
             SearchPerformed = false; // No search performed initially
             return Page();
         }
@@ -55,15 +61,19 @@ namespace MasterKinder.Pages
             Forskoleverksamheter = await _csvService.GetForskoleverksamheterAsync();
 
             // Uppdaterad metodanrop
-            var (responsePercentages, totalResponses) = await _csvService.CalculateResponsePercentagesAsync(SelectedQuestion, SelectedForskoleverksamhet);
+            var (responsePercentages, totalResponses, helhetsomdome, svarsfrekvens) = await _csvService.CalculateResponsePercentagesAsync(SelectedQuestion, SelectedForskoleverksamhet);
             ResponsePercentages = responsePercentages;
             TotalResponses = totalResponses;
+            Helhetsomdome = helhetsomdome;
+            Svarsfrekvens = svarsfrekvens;
 
             SearchPerformed = true; // Search has been performed
 
             _logger.LogInformation($"SelectedQuestion: {SelectedQuestion}, SelectedForskoleverksamhet: {SelectedForskoleverksamhet}");
             _logger.LogInformation($"ResponsePercentages count: {ResponsePercentages.Count}");
             _logger.LogInformation($"TotalResponses: {TotalResponses}");
+            _logger.LogInformation($"Helhetsomdome: {Helhetsomdome}");
+            _logger.LogInformation($"Svarsfrekvens: {Svarsfrekvens}");
 
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             {

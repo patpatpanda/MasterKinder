@@ -1,4 +1,5 @@
 ﻿using MasterKinder.Models;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace MasterKinder.Data
@@ -11,6 +12,8 @@ namespace MasterKinder.Data
         }
 
         public DbSet<SurveyResponse> SurveyResponses { get; set; }
+       
+
     }
 
 }

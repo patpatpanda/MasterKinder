@@ -57,8 +57,8 @@ public class SurveyController : ControllerBase
     {
         try
         {
-            var (responsePercentages, totalResponses) = await _csvService.CalculateResponsePercentagesAsync(request.SelectedQuestion, request.SelectedForskoleverksamhet);
-            return Ok(new { responsePercentages, totalResponses });
+            var (responsePercentages, totalResponses, helhetsomdome, svarsfrekvens) = await _csvService.CalculateResponsePercentagesAsync(request.SelectedQuestion, request.SelectedForskoleverksamhet);
+            return Ok(new { responsePercentages, totalResponses, helhetsomdome, svarsfrekvens });
         }
         catch (Exception ex)
         {
@@ -66,6 +66,8 @@ public class SurveyController : ControllerBase
             return StatusCode(500, "Internal server error");
         }
     }
+
+
     [HttpGet("response-count")]
     public async Task<IActionResult> GetResponseCount([FromQuery] string question, [FromQuery] string forskoleverksamhet)
     {
@@ -80,6 +82,21 @@ public class SurveyController : ControllerBase
             return StatusCode(500, "Internal server error");
         }
     }
+    [HttpGet("preschool-statistics")]
+    public async Task<IActionResult> GetPreschoolStatistics([FromQuery] string forskoleverksamhet)
+    {
+        try
+        {
+            var statistics = await _csvService.GetPreschoolStatisticsAsync(forskoleverksamhet);
+            return Ok(statistics);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred while fetching preschool statistics.");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
 
 }
 
