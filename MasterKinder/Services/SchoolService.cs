@@ -15,6 +15,7 @@ namespace MasterKinder.Services
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<SchoolService> _logger;
 
+
         public SchoolService(IServiceProvider serviceProvider, ILogger<SchoolService> logger)
         {
             _serviceProvider = serviceProvider;

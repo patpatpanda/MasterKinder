@@ -1,9 +1,8 @@
-﻿using PuppeteerSharp;
-
-namespace MasterKinder.Models
+﻿namespace MasterKinder.Models
 {
-     public class SchoolDetailsDto
+    public class SchoolDetailsDto
     {
+        public int SchoolId { get; set; } // Add this line
         public string SchoolName { get; set; }
         public int TotalResponses { get; set; }
         public double Helhetsomdome { get; set; }
@@ -27,7 +26,4 @@ namespace MasterKinder.Models
         public string TypeOfService { get; set; }
         public string Website { get; set; }
     }
-
-
-
 }
