@@ -73,59 +73,12 @@ namespace MasterKinder.Services
             }
         }
 
-        public async Task<SchoolDetailsDto> GetSchoolDetailsByGoogleName(string googlePlaceName)
-        {
-            using (var scope = _serviceProvider.CreateScope())
-            {
-                var context = scope.ServiceProvider.GetRequiredService<MrDb>();
-                var query = context.Schools.AsQueryable();
+        // Om du inte längre behöver GetSchoolDetailsByGoogleName, kan du ta bort denna metod.
+        // public async Task<SchoolDetailsDto> GetSchoolDetailsByGoogleName(string googlePlaceName)
+        // {
+        //     // Implementation
+        // }
 
-                var allSchoolNames = await context.Schools
-                    .Select(s => s.SchoolName)
-                    .Distinct()
-                    .ToListAsync();
-
-                // Hitta den närmaste matchningen med Levenshtein-avstånd
-                string bestMatch = allSchoolNames
-                    .OrderBy(name => LevenshteinDistance(name.ToLower(), googlePlaceName.ToLower()))
-                    .FirstOrDefault();
-
-                if (bestMatch == null || LevenshteinDistance(bestMatch.ToLower(), googlePlaceName.ToLower()) > 3)
-                {
-                    _logger.LogInformation($"No close match found for Google place name '{googlePlaceName}'");
-                    return null;
-                }
-
-                // Kontrollera om det finns en skola som exakt matchar bestMatch
-                var school = await context.Schools
-                    .Include(s => s.Responses)
-                    .FirstOrDefaultAsync(s => s.SchoolName.ToLower() == bestMatch.ToLower());
-
-                if (school == null)
-                {
-                    _logger.LogInformation($"No school found for best match '{bestMatch}'");
-                    return null;
-                }
-
-                var totalResponses = school.TotalResponses;
-                var satisfactionPercentage = school.SatisfactionPercentage;
-                var helhetsomdome = school.Responses
-                    .Where(r => r.Question == "Helhetsomdöme")
-                    .Select(r => r.Percentage)
-                    .FirstOrDefault();
-                var svarsfrekvens = satisfactionPercentage;
-                var antalBarn = totalResponses > 0 ? (int)(totalResponses / (satisfactionPercentage / 100)) : 0;
-
-                return new SchoolDetailsDto
-                {
-                    SchoolName = school.SchoolName,
-                    TotalResponses = totalResponses,
-                    Helhetsomdome = helhetsomdome,
-                    Svarsfrekvens = svarsfrekvens,
-                    AntalBarn = antalBarn
-                };
-            }
-        }
 
         public static int LevenshteinDistance(string a, string b)
         {
@@ -154,8 +107,128 @@ namespace MasterKinder.Services
                 }
             }
 
+            Console.WriteLine($"Levenshtein distance between '{a}' and '{b}' is {matrix[a.Length, b.Length]}");
+
             return matrix[a.Length, b.Length];
         }
 
+
+        public async Task<SchoolDetailsDto> GetSchoolDetailsByGoogleName(string googlePlaceAddress)
+        {
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<MrDb>();
+
+                // Decode the incoming address
+                var decodedAddress = Uri.UnescapeDataString(googlePlaceAddress).ToLower();
+
+                // Sanitize the address by removing extra spaces
+                string NormalizeAddress(string address) =>
+                    string.Join(" ", address.Split(new char[] { ' ', ',', '.' }, StringSplitOptions.RemoveEmptyEntries));
+
+                var normalizedGooglePlaceAddress = NormalizeAddress(decodedAddress);
+
+                // Fetch all schools and normalize their addresses for comparison
+                var schools = await context.Schools
+                    .Include(s => s.Responses)
+                    .ToListAsync();
+
+                var school = schools
+                    .FirstOrDefault(s => NormalizeAddress(s.Address.ToLower()) == normalizedGooglePlaceAddress);
+
+                if (school == null)
+                {
+                    _logger.LogInformation($"No school found for address '{googlePlaceAddress}'");
+                    return null;
+                }
+
+                var totalResponses = school.TotalResponses;
+                var satisfactionPercentage = school.SatisfactionPercentage;
+                var helhetsomdome = school.Responses
+                    .Where(r => r.Question == "Helhetsomdöme")
+                    .Select(r => r.Percentage)
+                    .FirstOrDefault();
+                var svarsfrekvens = satisfactionPercentage;
+                var antalBarn = school.NumberOfChildren;
+
+                return new SchoolDetailsDto
+                {
+                    SchoolName = school.SchoolName,
+                    TotalResponses = totalResponses,
+                    Helhetsomdome = helhetsomdome,
+                    Svarsfrekvens = svarsfrekvens,
+                    AntalBarn = antalBarn,
+                    Address = school.Address,
+                    Description = school.Description,
+                    Principal = school.Principal,
+                    Email = school.Email,
+                    Phone = school.Phone,
+                    Website = school.Website,
+                    TypeOfService = school.TypeOfService,
+                    OperatingArea = school.OperatingArea,
+                    OrganizationForm = school.OrganizationForm,
+                    ChildrenPerEmployee = school.ChildrenPerEmployee,
+                    PercentageOfLicensedTeachers = school.PercentageOfLicensedTeachers,
+                    Accessibility = school.Accessibility,
+                    OrientationAndProfile = school.OrientationAndProfile,
+                    IndoorDescription = school.IndoorDescription,
+                    OutdoorDescription = school.OutdoorDescription,
+                    FoodAndMealsDescription = school.FoodAndMealsDescription,
+                    GoalsAndVisionDescription = school.GoalsAndVisionDescription,
+                    // Lägg till andra detaljer om det behövs
+                };
+            }
+        }
+
+
+
+        private async Task<SchoolDetailsDto> GetSchoolDetailsByName(string schoolName)
+        {
+            var context = _serviceProvider.GetRequiredService<MrDb>();
+            var school = await context.Schools
+                .Include(s => s.Responses)
+                .FirstOrDefaultAsync(s => s.SchoolName.ToLower() == schoolName.ToLower());
+
+            if (school == null)
+            {
+                _logger.LogInformation($"No school found for name '{schoolName}'");
+                return null;
+            }
+
+            var totalResponses = school.TotalResponses;
+            var satisfactionPercentage = school.SatisfactionPercentage;
+            var helhetsomdome = school.Responses
+                .Where(r => r.Question == "Helhetsomdöme")
+                .Select(r => r.Percentage)
+                .FirstOrDefault();
+            var svarsfrekvens = satisfactionPercentage;
+            var antalBarn = school.NumberOfChildren;
+
+            return new SchoolDetailsDto
+            {
+                SchoolName = school.SchoolName,
+                TotalResponses = totalResponses,
+                Helhetsomdome = helhetsomdome,
+                Svarsfrekvens = svarsfrekvens,
+                AntalBarn = antalBarn,
+                // Add other details if needed
+            };
+        }
+
+
+
+
+
+
+
+
+
     }
 }
+   
+
+
+
+
+
+

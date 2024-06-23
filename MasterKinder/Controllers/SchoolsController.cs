@@ -3,6 +3,7 @@ using MasterKinder.Services;
 using MasterKinder.Models;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace MasterKinder.Controllers
 {
@@ -40,7 +41,25 @@ namespace MasterKinder.Controllers
             {
                 SchoolName = request.SchoolName,
                 TotalResponses = request.TotalResponses,
-                SatisfactionPercentage = request.SatisfactionPercentage,
+                SatisfactionPercentage = request.ResponseRatePercentage,
+                NumberOfChildren = request.NumberOfChildren,
+                Address = request.Address,
+                Description = request.Description,
+                Principal = request.Contact.Principal,
+                Email = request.Contact.Email,
+                Phone = request.Contact.Phone,
+                Website = request.Contact.Website,
+                TypeOfService = request.TypeOfService,
+                OperatingArea = request.OperatingArea,
+                OrganizationForm = request.OrganizationForm,
+                ChildrenPerEmployee = request.ChildrenPerEmployee,
+                PercentageOfLicensedTeachers = request.PercentageOfLicensedTeachers,
+                Accessibility = request.Accessibility,
+                OrientationAndProfile = request.OrientationAndProfile,
+                IndoorDescription = request.IndoorDescription,
+                OutdoorDescription = request.OutdoorDescription,
+                FoodAndMealsDescription = request.FoodAndMealsDescription,
+                GoalsAndVisionDescription = request.GoalsAndVisionDescription,
                 Responses = new List<Response>()
             };
 
@@ -52,14 +71,52 @@ namespace MasterKinder.Controllers
                     Percentage = responseRequest.Percentage,
                     Gender = responseRequest.Gender,
                     Year = responseRequest.Year,
-                    Category = responseRequest.Category // Lägg till detta fält
+                    Category = responseRequest.Category,
+                    School = school // Lägg till detta om det inte skapar en cykel
                 });
             }
 
             await _schoolService.AddSchool(school);
 
-            return CreatedAtAction(nameof(GetSchoolById), new { id = school.SchoolId }, school);
+            return CreatedAtAction(nameof(GetSchoolById), new { id = school.SchoolId }, new
+            {
+                school.SchoolId,
+                school.SchoolName,
+                school.TotalResponses,
+                school.SatisfactionPercentage,
+                school.NumberOfChildren,
+                school.Address,
+                school.Description,
+                Contact = new
+                {
+                    school.Principal,
+                    school.Email,
+                    school.Phone,
+                    school.Website
+                },
+                school.TypeOfService,
+                school.OperatingArea,
+                school.OrganizationForm,
+                school.ChildrenPerEmployee,
+                school.PercentageOfLicensedTeachers,
+                school.Accessibility,
+                school.OrientationAndProfile,
+                school.IndoorDescription,
+                school.OutdoorDescription,
+                school.FoodAndMealsDescription,
+                school.GoalsAndVisionDescription,
+                Responses = school.Responses.Select(r => new
+                {
+                    r.Question,
+                    r.Percentage,
+                    r.Gender,
+                    r.Year,
+                    r.Category
+                })
+            });
         }
+
+
         [HttpGet("details/{id}")]
         public async Task<IActionResult> GetSchoolDetails(int id)
         {
@@ -72,8 +129,8 @@ namespace MasterKinder.Controllers
 
             var helhetsomdome = school.Responses.FirstOrDefault(r => r.Question == "Helhetsomdöme")?.Percentage ?? 0;
             var totalResponses = school.TotalResponses;
-            var svarsfrekvens = school.SatisfactionPercentage; // Assuming this represents response frequency
-            var antalBarn = totalResponses > 0 ? (int)(totalResponses / (svarsfrekvens / 100)) : 0;
+            var svarsfrekvens = school.SatisfactionPercentage;
+            var antalBarn = school.NumberOfChildren;
 
             return Ok(new
             {
@@ -81,14 +138,35 @@ namespace MasterKinder.Controllers
                 Helhetsomdome = helhetsomdome,
                 TotalResponses = totalResponses,
                 Svarsfrekvens = svarsfrekvens,
-                AntalBarn = antalBarn
+                AntalBarn = antalBarn,
+                Address = school.Address,
+                Description = school.Description,
+                Contact = new
+                {
+                    Principal = school.Principal,
+                    Email = school.Email,
+                    Phone = school.Phone,
+                    Website = school.Website
+                },
+                TypeOfService = school.TypeOfService,
+                OperatingArea = school.OperatingArea,
+                OrganizationForm = school.OrganizationForm,
+                ChildrenPerEmployee = school.ChildrenPerEmployee,
+                PercentageOfLicensedTeachers = school.PercentageOfLicensedTeachers,
+                Accessibility = school.Accessibility,
+                OrientationAndProfile = school.OrientationAndProfile,
+                IndoorDescription = school.IndoorDescription,
+                OutdoorDescription = school.OutdoorDescription,
+                FoodAndMealsDescription = school.FoodAndMealsDescription,
+                GoalsAndVisionDescription = school.GoalsAndVisionDescription
             });
         }
 
-        [HttpGet("details/google/{placeName}")]
-        public async Task<IActionResult> GetSchoolDetailsByGoogleName(string placeName)
+        // Ny metod för att hämta detaljer genom Google-namn
+        [HttpGet("details/google/{placeAddress}")]
+        public async Task<IActionResult> GetSchoolDetailsByGoogleName(string placeAddress)
         {
-            var schoolDetails = await _schoolService.GetSchoolDetailsByGoogleName(placeName);
+            var schoolDetails = await _schoolService.GetSchoolDetailsByGoogleName(placeAddress);
 
             if (schoolDetails == null)
             {
@@ -97,6 +175,7 @@ namespace MasterKinder.Controllers
 
             return Ok(schoolDetails);
         }
+
 
 
         // GET: api/schools/{id}
@@ -111,6 +190,14 @@ namespace MasterKinder.Controllers
             }
 
             return Ok(school);
+        }
+
+        // GET: api/schools
+        [HttpGet]
+        public async Task<IActionResult> GetAllSchools()
+        {
+            var schools = await _schoolService.GetAllSchools();
+            return Ok(schools);
         }
     }
 }
