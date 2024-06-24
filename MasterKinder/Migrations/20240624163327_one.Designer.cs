@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MasterKinder.Migrations
 {
     [DbContext(typeof(MrDb))]
-    [Migration("20240624143648_la")]
-    partial class la
+    [Migration("20240624163327_one")]
+    partial class one
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -53,36 +53,6 @@ namespace MasterKinder.Migrations
                     b.HasIndex("ForskolanId");
 
                     b.ToTable("kontaktInfos");
-                });
-
-            modelBuilder.Entity("KinderReader.Models.PdfResult", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AntalSvar")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ForskolanId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Helhetsomdome")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Svarsfrekvens")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ForskolanId");
-
-                    b.ToTable("PdfResults");
                 });
 
             modelBuilder.Entity("MasterKinder.Models.Forskolan", b =>
@@ -154,22 +124,9 @@ namespace MasterKinder.Migrations
                     b.Navigation("Forskolan");
                 });
 
-            modelBuilder.Entity("KinderReader.Models.PdfResult", b =>
-                {
-                    b.HasOne("MasterKinder.Models.Forskolan", "Forskolan")
-                        .WithMany("PdfResults")
-                        .HasForeignKey("ForskolanId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Forskolan");
-                });
-
             modelBuilder.Entity("MasterKinder.Models.Forskolan", b =>
                 {
                     b.Navigation("Kontakter");
-
-                    b.Navigation("PdfResults");
                 });
 #pragma warning restore 612, 618
         }

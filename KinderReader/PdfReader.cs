@@ -1,60 +1,72 @@
-﻿using System;
-using System.IO;
-using System.Net.Http;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using KinderReader.Models;
-using MasterKinder.Data;
-using Microsoft.Extensions.DependencyInjection;
-using UglyToad.PdfPig;
+﻿//using MasterKinder.Data;
+//using MasterKinder.Models;
+//using Microsoft.Extensions.Logging;
+//using System.Net.Http;
+//using System.Text.RegularExpressions;
+//using System.Threading.Tasks;
+//using UglyToad.PdfPig;
 
-namespace KinderReader
-{
-    public class PdfReader
-    {
-        public static async Task ReadPdfFromUrl(string pdfUrl, IServiceProvider services, int forskolanId)
-        {
-            using var httpClient = new HttpClient();
-            var response = await httpClient.GetAsync(pdfUrl);
+//namespace KinderReader
+//{
+//    public class PdfReader
+//    {
+//        private readonly ILogger<PdfReader> _logger;
+//        private readonly MrDb _context;
 
-            if (response.IsSuccessStatusCode)
-            {
-                var pdfBytes = await response.Content.ReadAsByteArrayAsync();
-                using var pdfStream = new MemoryStream(pdfBytes);
+//        public PdfReader(ILogger<PdfReader> logger, MrDb context)
+//        {
+//            _logger = logger;
+//            _context = context;
+//        }
 
-                using var document = PdfDocument.Open(pdfStream);
-                var page = document.GetPage(1);
-                var text = page.Text;
+//        public async Task ReadPdfFromUrl(string pdfUrl, int forskolanId)
+//        {
+//            _logger.LogInformation($"Starting to read PDF from URL: {pdfUrl}");
 
-                var data = ExtractDataFromText(text);
+//            try
+//            {
+//                using var httpClient = new HttpClient();
+//                var pdfBytes = await httpClient.GetByteArrayAsync(pdfUrl);
 
-                using var scope = services.CreateScope();
-                var context = scope.ServiceProvider.GetRequiredService<MrDb>();
+//                using var document = PdfDocument.Open(pdfBytes);
+//                var firstPageText = document.GetPage(1).Text;
 
-                var pdfResult = new PdfResult
-                {
-                    ForskolanId = forskolanId,
-                    Helhetsomdome = data.Helhetsomdome,
-                    AntalSvar = data.AntalSvar,
-                    Svarsfrekvens = data.Svarsfrekvens
-                };
+//                var pdfResults = ExtractDataFromText(firstPageText, _logger);
+//                SavePdfResults(forskolanId, pdfResults);
 
-                context.PdfResults.Add(pdfResult);
-                await context.SaveChangesAsync();
-            }
-            else
-            {
-                Console.WriteLine($"Failed to download PDF from URL: {pdfUrl}");
-            }
-        }
+//                _logger.LogInformation($"Successfully processed PDF from URL: {pdfUrl}");
+//            }
+//            catch (Exception ex)
+//            {
+//                _logger.LogError($"Error processing PDF from URL: {pdfUrl}. Error: {ex.Message}");
+//            }
+//        }
 
-        private static (string Helhetsomdome, string AntalSvar, string Svarsfrekvens) ExtractDataFromText(string text)
-        {
-            string helhetsomdome = Regex.Match(text, @"HELHETSOMDÖME\s+(\d+)").Groups[1].Value;
-            string antalSvar = Regex.Match(text, @"(\d+)\s+svar").Groups[1].Value;
-            string svarsfrekvens = Regex.Match(text, @"svarsfrekvens\s+(\d+)\s*%").Groups[1].Value;
+//        private (string Helhetsomdome, string AntalSvar, string Svarsfrekvens) ExtractDataFromText(string text, ILogger logger)
+//        {
+//            logger.LogInformation($"Extracted text from PDF: {text}");
 
-            return (helhetsomdome, antalSvar, svarsfrekvens);
-        }
-    }
-}
+//            string helhetsomdome = Regex.Match(text, @"HELHETSOMDÖME\s+(\d+)", RegexOptions.IgnoreCase).Groups[1].Value;
+//            string antalSvar = Regex.Match(text, @"(\d+)\s+svar", RegexOptions.IgnoreCase).Groups[1].Value;
+//            string svarsfrekvens = Regex.Match(text, @"svarsfrekvens\s+(\d+)\s*%", RegexOptions.IgnoreCase).Groups[1].Value;
+
+//            logger.LogInformation($"Parsed Helhetsomdome: {helhetsomdome}, AntalSvar: {antalSvar}, Svarsfrekvens: {svarsfrekvens}");
+
+//            return (helhetsomdome, antalSvar, svarsfrekvens);
+//        }
+
+//        private void SavePdfResults(int forskolanId, (string Helhetsomdome, string AntalSvar, string Svarsfrekvens) pdfResults)
+//        {
+//            var result = new PdfResult
+//            {
+//                ForskolanId = forskolanId,
+//                Helhetsomdome = pdfResults.Helhetsomdome,
+//                AntalSvar = pdfResults.AntalSvar,
+//                Svarsfrekvens = pdfResults.Svarsfrekvens
+//            };
+
+//            _context.PdfResults.Add(result);
+//            _context.SaveChanges();
+//        }
+//    }
+//}

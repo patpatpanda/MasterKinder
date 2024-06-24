@@ -1,9 +1,5 @@
 ﻿using KinderReader.Models;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MasterKinder.Models
 {
@@ -25,7 +21,6 @@ namespace MasterKinder.Models
         public string? KostOchMaltider { get; set; }
         public string? MalOchVision { get; set; }
         public string? MerOmOss { get; set; }
-        public List<KontaktInfo>? Kontakter { get; set; }
-        public List<PdfResult>? PdfResults { get; set; } // Add this property
+        public ICollection<KontaktInfo>? Kontakter { get; set; }
     }
 }
