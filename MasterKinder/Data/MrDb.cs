@@ -1,5 +1,5 @@
-﻿using MasterKinder.Models;
-
+﻿using KinderReader.Models;
+using MasterKinder.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace MasterKinder.Data
@@ -11,19 +11,23 @@ namespace MasterKinder.Data
         {
         }
 
-        
-        public DbSet<School> Schools { get; set; }
-        public DbSet<Response> Responses { get; set; }
-
+        public DbSet<Forskolan> Forskolans { get; set; }
+        public DbSet<KontaktInfo> kontaktInfos { get; set; }
+        public DbSet<PdfResult> PdfResults { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<School>()
-                .HasMany(s => s.Responses)
-                .WithOne(r => r.School)
-                .HasForeignKey(r => r.SchoolId);
+            modelBuilder.Entity<Forskolan>()
+                .HasMany(f => f.Kontakter)
+                .WithOne(k => k.Forskolan)
+                .HasForeignKey(k => k.ForskolanId);
+
+            modelBuilder.Entity<Forskolan>()
+                .HasMany(f => f.PdfResults)
+                .WithOne(p => p.Forskolan)
+                .HasForeignKey(p => p.ForskolanId);
+
+            base.OnModelCreating(modelBuilder);
         }
-
     }
-
 }

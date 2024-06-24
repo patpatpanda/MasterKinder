@@ -4,43 +4,9 @@
     ViewData["Title"] = "Survey Responses";
 }
 
-<h5>Fråga mig om förskola (2023)</h5>
-<div class="input-container">
-    <input id="address" type="text" class="styled-input" placeholder="Ange din Address" value="Sergels torg 1, 111 57 Stockholm, Sverige">
-    <input type="button" class="styled-button" value="Hitta Förskolor" onclick="geocodeAddress(new google.maps.Geocoder(), map)">
-</div>
 
 
-<div class="map-container">
-    <div id="map"></div>
-    <div id="right-panel"></div>
-</div>
 
-<form id="searchForm" method="post">
-    <div style="margin-top:20px">
-        <label for="questionSelect">Välj Fråga:</label>
-        <select id="questionSelect" name="SelectedQuestion" asp-for="SelectedQuestion" asp-items="@(new SelectList(Model.Questions))">
-            <option value="">-- Select a question --</option>
-        </select>
-    </div>
-    <div>
-        <label for="forskoleverksamhetSelect">Välj Förskoleverksamhet:</label>
-        <select id="forskoleverksamhetSelect" name="SelectedForskoleverksamhet" asp-for="SelectedForskoleverksamhet" asp-items="@(new SelectList(Model.Forskoleverksamheter))">
-            <option value="">-- Select Förskoleverksamhet --</option>
-        </select>
-    </div>
-    <div class="sleep">
-        <div id="loadingSpinner" style="display: none;">
-            <div class="spinner"></div>
-        </div>
-
-        <button id="loginButton" type="submit">Sök</button>
-    </div>
-</form>
-
-<div id="results">
-    @await Html.PartialAsync("Shared/ResultPartial", Model)
-</div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>

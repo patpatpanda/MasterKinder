@@ -20,14 +20,12 @@ builder.Services.AddControllers()
 // Configure DbContexts
 builder.Services.AddDbContext<MrDb>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultSQLConnection")));
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultSQLConnection")));
+
 
 builder.Services.AddMemoryCache(); // Lägg till denna rad för att registrera IMemoryCache
-builder.Services.AddScoped<CsvService>();
-builder.Services.AddSingleton<MasterKinder.Services.AuthService>();
-builder.Services.AddSingleton<MasterKinder.Services.PowerBIService>();
-builder.Services.AddScoped<ISchoolService, SchoolService>(); // Registrera SchoolService
+
+
+
 
 // Add CORS policy
 builder.Services.AddCors(options =>
