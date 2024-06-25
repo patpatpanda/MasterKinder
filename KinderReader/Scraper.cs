@@ -1,8 +1,15 @@
 ﻿using System.Net;
 using HtmlAgilityPack;
+using iText.Kernel.Pdf.Canvas.Parser;
+using iText.Kernel.Pdf;
 using KinderReader.Models;
 using MasterKinder.Data;
 using MasterKinder.Models;
+using iTextSharp.text.pdf;
+using iTextSharp.text.pdf.parser;
+using System.IO;
+using PdfReader = iTextSharp.text.pdf.PdfReader;
+using PdfTextExtractor = iTextSharp.text.pdf.parser.PdfTextExtractor;
 
 public class Scraper
 {
@@ -125,5 +132,39 @@ public class Scraper
     {
         text = text.TrimEnd('%');
         return ParseDouble(text);
+    }
+    public async Task<List<string>> ScrapePdfLinksAsync(string url)
+    {
+        var httpClient = new HttpClient();
+        var html = await httpClient.GetStringAsync(url);
+        var htmlDocument = new HtmlDocument();
+        htmlDocument.LoadHtml(html);
+
+        var pdfLinks = new List<string>();
+        var nodes = htmlDocument.DocumentNode.SelectNodes("//a[contains(@href, '.pdf')]");
+
+        if (nodes != null)
+        {
+            pdfLinks.AddRange(nodes.Select(node => node.GetAttributeValue("href", string.Empty)));
+        }
+
+        return pdfLinks;
+    }
+    public async Task<string> DownloadAndExtractPdfText(string pdfUrl)
+    {
+        var httpClient = new HttpClient();
+        var pdfBytes = await httpClient.GetByteArrayAsync(pdfUrl);
+        var pdfText = string.Empty;
+
+        using (var stream = new MemoryStream(pdfBytes))
+        using (var reader = new PdfReader(stream))
+        {
+            for (int i = 1; i <= reader.NumberOfPages; i++)
+            {
+                pdfText += PdfTextExtractor.GetTextFromPage(reader, i);
+            }
+        }
+
+        return pdfText;
     }
 }

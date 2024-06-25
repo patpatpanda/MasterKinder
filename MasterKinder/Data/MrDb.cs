@@ -6,6 +6,8 @@ namespace MasterKinder.Data
 {
     public class MrDb : DbContext
     {
+        
+
         public MrDb(DbContextOptions<MrDb> options)
             : base(options)
         {
@@ -13,7 +15,7 @@ namespace MasterKinder.Data
 
         public DbSet<Forskolan> Forskolans { get; set; }
         public DbSet<KontaktInfo> kontaktInfos { get; set; }
-
+        public DbSet<PdfData> PdfData { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Forskolan>()
