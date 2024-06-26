@@ -57,7 +57,7 @@ async Task RunPdfScraperAsync(IServiceProvider services)
     try
     {
         // Pass your actual URL here
-        await pdfScrapingService.ScrapeAndSavePdfData("https://ssan.stockholm.se/anonym/webdokument/Delade%20dokument/Forms/AllItems.aspx?RootFolder=%2Fanonym%2Fwebdokument%2FDelade%20dokument%2FF%C3%B6rskolor%2F2024%2FS%C3%B6dermalm&FolderCTID=0x01200015B00A3B7947284E8A98F455403CF440&View=%7BCEB0BF65-2CB1-4A7B-A2B3-D82EE112AAA7%7D\r\n");
+        await pdfScrapingService.ScrapeAndSavePdfData("https://ssan.stockholm.se/anonym/webdokument/Delade%20dokument/Forms/AllItems.aspx?RootFolder=%2Fanonym%2Fwebdokument%2FDelade%20dokument%2FF%C3%B6rskolor%2F2024%2FS%C3%B6dermalm&FolderCTID=0x01200015B00A3B7947284E8A98F455403CF440&View=%7BCEB0BF65%2D2CB1%2D4A7B%2DA2B3%2DD82EE112AAA7%7D\r\n");
     }
     catch (Exception ex)
     {
