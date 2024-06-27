@@ -43,6 +43,7 @@ namespace MasterKinder.Controllers
         }
 
         // GET: api/Forskolan/address/{address}
+        // GET: api/Forskolan/address/{address}
         [HttpGet("address/{address}")]
         public async Task<ActionResult<IEnumerable<Forskolan>>> GetForskolansByAddress(string address)
         {
@@ -52,11 +53,12 @@ namespace MasterKinder.Controllers
 
             if (forskolans == null || forskolans.Count == 0)
             {
-                return NotFound();
+                return NotFound("No preschools found for the given address.");
             }
 
-            return forskolans;
+            return Ok(forskolans);
         }
+
 
         // POST: api/Forskolan
         [HttpPost]
@@ -135,7 +137,7 @@ namespace MasterKinder.Controllers
                     Distance = GeoHelper.Haversine(lat, lng, f.Latitude, f.Longitude)
                 })
                 .OrderBy(f => f.Distance)
-                .Take(5)
+                .Take(10)
                 .Select(f => f.Forskolan)
                 .ToList();
 
