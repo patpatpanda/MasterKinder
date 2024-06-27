@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace MasterKinder.Models
 {
-    public class Forskolan
+     public class Forskolan
     {
         public int Id { get; set; }
         public string? Namn { get; set; }
@@ -22,5 +22,8 @@ namespace MasterKinder.Models
         public string? MalOchVision { get; set; }
         public string? MerOmOss { get; set; }
         public ICollection<KontaktInfo>? Kontakter { get; set; }
+        public double Latitude { get; set; } // Nytt fält
+        public double Longitude { get; set; } // Nytt fält
     }
+
 }

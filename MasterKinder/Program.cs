@@ -24,7 +24,7 @@ builder.Services.AddDbContext<MrDb>(options =>
 
 builder.Services.AddMemoryCache(); // Lägg till denna rad för att registrera IMemoryCache
 
-
+builder.Services.AddHttpClient<GeocodeService>();
 
 
 // Add CORS policy

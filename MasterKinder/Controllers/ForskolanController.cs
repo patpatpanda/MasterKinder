@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MasterKinder.Services;
 
 namespace MasterKinder.Controllers
 {
@@ -13,12 +14,13 @@ namespace MasterKinder.Controllers
     public class ForskolanController : ControllerBase
     {
         private readonly MrDb _context;
+        private readonly GeocodeService _geocodeService;
 
-        public ForskolanController(MrDb context)
+        public ForskolanController(MrDb context, GeocodeService geocodeService)
         {
             _context = context;
+            _geocodeService = geocodeService;
         }
-
         // GET: api/Forskolan
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Forskolan>>> GetForskolans()
@@ -65,7 +67,17 @@ namespace MasterKinder.Controllers
 
             return CreatedAtAction("GetForskolan", new { id = forskolan.Id }, forskolan);
         }
+        [HttpGet("geocode/{address}")]
+        public async Task<ActionResult<GeocodeResult>> GeocodeAddress(string address)
+        {
+            var coordinates = await _geocodeService.GeocodeAddress(address);
+            if (coordinates == null)
+            {
+                return NotFound();
+            }
 
+            return Ok(coordinates);
+        }
         // PUT: api/Forskolan/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> PutForskolan(int id, Forskolan forskolan)
@@ -111,10 +123,47 @@ namespace MasterKinder.Controllers
 
             return NoContent();
         }
+        [HttpGet("nearby/{lat}/{lng}")]
+        public async Task<ActionResult<IEnumerable<Forskolan>>> GetNearbyForskolans(double lat, double lng)
+        {
+            var forskolans = await _context.Forskolans.ToListAsync();
+
+            var sortedForskolans = forskolans
+                .Select(f => new
+                {
+                    Forskolan = f,
+                    Distance = GeoHelper.Haversine(lat, lng, f.Latitude, f.Longitude)
+                })
+                .OrderBy(f => f.Distance)
+                .Take(5)
+                .Select(f => f.Forskolan)
+                .ToList();
+
+            return Ok(sortedForskolans);
+        }
+
 
         private bool ForskolanExists(int id)
         {
             return _context.Forskolans.Any(e => e.Id == id);
         }
+        public static class GeoHelper
+        {
+            public static double Haversine(double lat1, double lon1, double lat2, double lon2)
+            {
+                const double R = 6371; // Jordens radie i kilometer
+                var dLat = (lat2 - lat1) * Math.PI / 180;
+                var dLon = (lon2 - lon1) * Math.PI / 180;
+                var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                        Math.Cos(lat1 * Math.PI / 180) * Math.Cos(lat2 * Math.PI / 180) *
+                        Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+                var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+                return R * c;
+            }
+        }
+
+
+
+
     }
 }
