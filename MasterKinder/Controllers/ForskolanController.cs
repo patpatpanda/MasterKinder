@@ -126,10 +126,17 @@ namespace MasterKinder.Controllers
             return NoContent();
         }
         [HttpGet("nearby/{lat}/{lng}")]
-        public async Task<ActionResult<IEnumerable<Forskolan>>> GetNearbyForskolans(double lat, double lng)
+        public async Task<ActionResult<IEnumerable<Forskolan>>> GetNearbyForskolans(double lat, double lng, [FromQuery] string organisationsform = "alla")
         {
             var forskolans = await _context.Forskolans.ToListAsync();
 
+            // Filtrera baserat på organisationsform
+            if (!string.IsNullOrEmpty(organisationsform) && organisationsform.ToLower() != "alla")
+            {
+                forskolans = forskolans.Where(f => f.Organisationsform.Equals(organisationsform, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
+            // Beräkna avstånd och sortera
             var sortedForskolans = forskolans
                 .Select(f => new
                 {
@@ -143,6 +150,7 @@ namespace MasterKinder.Controllers
 
             return Ok(sortedForskolans);
         }
+
 
 
         private bool ForskolanExists(int id)

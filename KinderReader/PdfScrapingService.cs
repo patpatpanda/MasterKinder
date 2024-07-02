@@ -130,6 +130,7 @@ public class PdfScrapingService
             Console.WriteLine($"Extracted name: {pdfData.Namn}");
         }
 
+
         if (string.IsNullOrWhiteSpace(pdfData.Namn))
         {
             Console.WriteLine("Failed to extract name. PDF text:");
