@@ -45,7 +45,7 @@ namespace MasterKinder.Controllers
         public async Task<ActionResult<IEnumerable<PdfData>>> GetPdfDataByName(string name)
         {
             var pdfData = await _context.PdfData
-                .Where(p => p.Namn.Contains(name))
+                .Where(p => EF.Functions.Like(p.Namn, $"%{name}%"))
                 .ToListAsync();
 
             if (pdfData == null || pdfData.Count == 0)

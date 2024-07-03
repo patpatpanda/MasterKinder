@@ -1,4 +1,5 @@
-﻿using MasterKinder.Data;
+﻿using KinderReader;
+using MasterKinder.Data;
 using MasterKinder.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,7 @@ using System;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,116 +23,98 @@ builder.Services.AddDbContext<MrDb>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultSQLConnection")));
 
+// Add the scraper service
+builder.Services.AddScoped<Scraper>();
+
 // Add HttpClient for making API requests
 builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
-// Update geocode data
-await UpdateGeocodeDataAsync(app.Services);
+// Configure the HTTP request pipeline.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+app.UseRouting();
+
+app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+// Run the main method
+await MainMethod(app.Services);
 
 app.Run();
 
-async Task UpdateGeocodeDataAsync(IServiceProvider services)
+async Task MainMethod(IServiceProvider services)
+{
+    // Räkna alla poster i Forskolans
+    int totalForskolans = await CountAllForskolansAsync(services);
+    Console.WriteLine($"Total number of Forskolans: {totalForskolans}");
+
+    // Exempel på att köra skrapning och andra operationer
+    await RunScraperAsync(services, 10987, 10988);
+   
+   
+}
+
+async Task<int> CountAllForskolansAsync(IServiceProvider services)
 {
     using var scope = services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<MrDb>();
-    var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
-    var httpClient = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>().CreateClient();
+    return await context.Forskolans.CountAsync();
+}
 
-    var forskolor = await context.Forskolans.ToListAsync();
+async Task RunScraperAsync(IServiceProvider services, int startId, int endId)
+{
+    using var scope = services.CreateScope();
+    var scraper = scope.ServiceProvider.GetRequiredService<Scraper>();
 
-    foreach (var forskola in forskolor)
+    int batchSize = 5; // Antal sidor per omgång
+    int maxEmptyPages = 50; // Max antal tomma sidor innan avbrott
+    int emptyPageCount = 0;
+    int totalEmptyPages = 0; // Totalt antal tomma sidor
+
+    for (int batchStart = startId; batchStart <= endId; batchStart += batchSize)
     {
-        if (forskola.Latitude == 0 && forskola.Longitude == 0)
+        int batchEnd = Math.Min(batchStart + batchSize - 1, endId);
+
+        for (int id = batchStart; id <= batchEnd; id++)
         {
-            if (string.IsNullOrWhiteSpace(forskola.Adress))
+            bool isSuccess = await scraper.Scrape(id);
+
+            if (!isSuccess)
             {
-                Console.WriteLine($"Skipping empty address for Forskolan ID: {forskola.Id}");
-                continue;
+                emptyPageCount++;
+                totalEmptyPages++;
+                Console.WriteLine($"Empty page count: {emptyPageCount} (Total empty pages: {totalEmptyPages})");
+            }
+            else
+            {
+                emptyPageCount = 0; // Återställ räknaren om en sida har innehåll
             }
 
-            var coordinates = await GeocodeAddressAsync(forskola.Adress, configuration, httpClient);
-            if (coordinates != null)
+            // Om vi har nått max antal tomma sidor, sluta skrapa
+            if (totalEmptyPages >= maxEmptyPages)
             {
-                forskola.Latitude = coordinates.Latitude;
-                forskola.Longitude = coordinates.Longitude;
-                context.Entry(forskola).State = EntityState.Modified;
+                Console.WriteLine($"Max empty pages reached. Stopping scraper at ID: {id}.");
+                return;
             }
-        }
-    }
 
-    await context.SaveChangesAsync();
-}
-
-async Task<GeocodeResult> GeocodeAddressAsync(string address, IConfiguration configuration, HttpClient httpClient)
-{
-    if (string.IsNullOrWhiteSpace(address))
-    {
-        Console.WriteLine("Address is null or empty.");
-        return null;
-    }
-
-    // Förbättra adressen genom att lägga till stad och land (om det behövs)
-    string improvedAddress = ImproveAddress(address);
-
-    var apiKey = configuration["GoogleMapsApiKey"];
-    var encodedAddress = Uri.EscapeDataString(improvedAddress);
-    var url = $"https://maps.googleapis.com/maps/api/geocode/json?address={encodedAddress}&key={apiKey}";
-
-    Console.WriteLine($"Geocoding URL: {url}");
-
-    try
-    {
-        var response = await httpClient.GetStringAsync(url);
-        var json = JObject.Parse(response);
-
-        if (json["results"] == null || !json["results"].Any())
-        {
-            Console.WriteLine($"No geocoding results for address: {improvedAddress}");
-            return null;
+            // Valfri fördröjning för att minska belastningen på servern
+            await Task.Delay(100); // 100 ms fördröjning
         }
 
-        var location = json["results"]?[0]?["geometry"]?["location"];
-        if (location == null)
-        {
-            Console.WriteLine($"No location data in geocoding results for address: {improvedAddress}");
-            return null;
-        }
-
-        return new GeocodeResult
-        {
-            Latitude = (double)location["lat"],
-            Longitude = (double)location["lng"]
-        };
-    }
-    catch (HttpRequestException e)
-    {
-        Console.WriteLine($"Request error: {e.Message}");
-        return null;
-    }
-}
-
-string ImproveAddress(string address)
-{
-    // Ta bort onödiga tecken och lägg till stad och land
-    string improvedAddress = address;
-
-    // Lägg till stad och land om de saknas
-    if (!address.Contains("Stockholm"))
-    {
-        improvedAddress += ", Stockholm";
-    }
-    if (!address.Contains("Sweden"))
-    {
-        improvedAddress += ", Sweden";
+        Console.WriteLine($"Completed batch from ID: {batchStart} to ID: {batchEnd}. Restarting process.");
     }
 
-    return improvedAddress.Trim();
-}
-
-public class GeocodeResult
-{
-    public double Latitude { get; set; }
-    public double Longitude { get; set; }
+    Console.WriteLine("Scraping process completed.");
 }
