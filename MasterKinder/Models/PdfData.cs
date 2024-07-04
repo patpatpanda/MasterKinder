@@ -13,5 +13,6 @@ namespace MasterKinder.Models
         public string Helhetsomdome { get; set; }
         public int Svarsfrekvens { get; set; }
         public int AntalSvar { get; set; }
+        public string NormalizedNamn { get; set; }
     }
 }

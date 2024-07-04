@@ -26,6 +26,26 @@ namespace MasterKinder.Controllers
             return await _context.PdfData.ToListAsync();
         }
 
+
+        [HttpGet("normalized-name/{name}")]
+        public async Task<IActionResult> GetPdfDataByNormalizedName(string name)
+        {
+            var normalizedName = name.ToLower();
+            var pdfData = await _context.PdfData
+                .Where(p => p.NormalizedNamn == normalizedName)
+                .ToListAsync();
+
+            if (pdfData == null || !pdfData.Any())
+            {
+                return NotFound();
+            }
+
+            return Ok(pdfData);
+        }
+
+
+
+
         // GET: api/PdfData/5
         [HttpGet("{id}")]
         public async Task<ActionResult<PdfData>> GetPdfData(int id)
@@ -45,7 +65,7 @@ namespace MasterKinder.Controllers
         public async Task<ActionResult<IEnumerable<PdfData>>> GetPdfDataByName(string name)
         {
             var pdfData = await _context.PdfData
-                .Where(p => EF.Functions.Like(p.Namn, $"%{name}%"))
+                .Where(p => p.Namn.Contains(name))
                 .ToListAsync();
 
             if (pdfData == null || pdfData.Count == 0)
