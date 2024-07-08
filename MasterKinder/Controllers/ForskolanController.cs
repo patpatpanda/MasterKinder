@@ -153,7 +153,7 @@ namespace MasterKinder.Controllers
                     Distance = GeoHelper.Haversine(lat, lng, f.Latitude, f.Longitude)
                 })
                 .OrderBy(f => f.Distance)
-                .Take(10)
+                .Take(15)
                 .Select(f => f.Forskolan)
                 .ToList();
 

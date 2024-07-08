@@ -1,16 +1,17 @@
 {
   "files": {
-    "main.css": "/static/css/main.deedaf8a.css",
-    "main.js": "/static/js/main.82f28fd3.js",
+    "main.css": "/static/css/main.89274b3d.css",
+    "main.js": "/static/js/main.c4e0896f.js",
     "static/js/453.eb2727c2.chunk.js": "/static/js/453.eb2727c2.chunk.js",
-    "static/media/kinder.webp": "/static/media/kinder.155c2bcdaf635db3605b.webp",
+    "static/media/stalin.png": "/static/media/stalin.27bd768a902aff4fe807.png",
+    "static/media/stalin_resized_1920x1080.png": "/static/media/stalin_resized_1920x1080.4153b68fcab387c732f2.png",
     "index.html": "/index.html",
-    "main.deedaf8a.css.map": "/static/css/main.deedaf8a.css.map",
-    "main.82f28fd3.js.map": "/static/js/main.82f28fd3.js.map",
+    "main.89274b3d.css.map": "/static/css/main.89274b3d.css.map",
+    "main.c4e0896f.js.map": "/static/js/main.c4e0896f.js.map",
     "453.eb2727c2.chunk.js.map": "/static/js/453.eb2727c2.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.deedaf8a.css",
-    "static/js/main.82f28fd3.js"
+    "static/css/main.89274b3d.css",
+    "static/js/main.c4e0896f.js"
   ]
 }
