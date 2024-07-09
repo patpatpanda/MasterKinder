@@ -21,6 +21,7 @@ namespace MasterKinder.Controllers
             _context = context;
             _geocodeService = geocodeService;
         }
+
         // GET: api/Forskolan
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Forskolan>>> GetForskolans()
@@ -43,7 +44,6 @@ namespace MasterKinder.Controllers
         }
 
         // GET: api/Forskolan/address/{address}
-        // GET: api/Forskolan/address/{address}
         [HttpGet("address/{address}")]
         public async Task<ActionResult<IEnumerable<Forskolan>>> GetForskolansByAddress(string address)
         {
@@ -59,7 +59,6 @@ namespace MasterKinder.Controllers
             return Ok(forskolans);
         }
 
-
         // POST: api/Forskolan
         [HttpPost]
         public async Task<ActionResult<Forskolan>> PostForskolan(Forskolan forskolan)
@@ -69,6 +68,7 @@ namespace MasterKinder.Controllers
 
             return CreatedAtAction("GetForskolan", new { id = forskolan.Id }, forskolan);
         }
+
         [HttpGet("geocode/{address}")]
         public async Task<ActionResult<GeocodeResult>> GeocodeAddress(string address)
         {
@@ -80,6 +80,7 @@ namespace MasterKinder.Controllers
 
             return Ok(coordinates);
         }
+
         // PUT: api/Forskolan/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> PutForskolan(int id, Forskolan forskolan)
@@ -125,11 +126,12 @@ namespace MasterKinder.Controllers
 
             return NoContent();
         }
+
         [HttpGet("nearby/{lat}/{lng}")]
         public async Task<ActionResult<IEnumerable<Forskolan>>> GetNearbyForskolans(
-     double lat, double lng,
-     [FromQuery] string organisationsform = "alla",
-     [FromQuery] string typAvService = "alla")
+            double lat, double lng,
+            [FromQuery] string organisationsform = "alla",
+            [FromQuery] string typAvService = "alla")
         {
             var forskolans = await _context.Forskolans.ToListAsync();
 
@@ -160,14 +162,20 @@ namespace MasterKinder.Controllers
             return Ok(sortedForskolans);
         }
 
-
-
-
+        [HttpGet("walking-time")]
+        public ActionResult<double> GetWalkingTime(double lat1, double lon1, double lat2, double lon2)
+        {
+            const double walkingSpeedKmPerHour = 5.0; // Antag konstant gånghastighet på 5 km/h
+            var distanceInKm = GeoHelper.Haversine(lat1, lon1, lat2, lon2);
+            var timeInHours = distanceInKm / walkingSpeedKmPerHour;
+            return Ok(timeInHours);
+        }
 
         private bool ForskolanExists(int id)
         {
             return _context.Forskolans.Any(e => e.Id == id);
         }
+
         public static class GeoHelper
         {
             public static double Haversine(double lat1, double lon1, double lat2, double lon2)
@@ -182,9 +190,5 @@ namespace MasterKinder.Controllers
                 return R * c;
             }
         }
-
-
-
-
     }
 }
