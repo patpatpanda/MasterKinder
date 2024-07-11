@@ -161,6 +161,22 @@ namespace MasterKinder.Controllers
 
             return Ok(sortedForskolans);
         }
+        // GET: api/Forskolan/search/{query}
+        [HttpGet("search/{query}")]
+        public async Task<ActionResult<IEnumerable<Forskolan>>> SearchForskolans(string query)
+        {
+            var forskolans = await _context.Forskolans
+                .Where(f => f.Namn.Contains(query))
+                .ToListAsync();
+
+            if (forskolans == null || forskolans.Count == 0)
+            {
+                return NotFound("No preschools found for the given query.");
+            }
+
+            return Ok(forskolans);
+        }
+
 
         [HttpGet("walking-time")]
         public ActionResult<double> GetWalkingTime(double lat1, double lon1, double lat2, double lon2)
