@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MasterKinder.Services;
+using static MasterKinder.Services.GeocodeService;
 
 namespace MasterKinder.Controllers
 {
@@ -15,11 +16,13 @@ namespace MasterKinder.Controllers
     {
         private readonly MrDb _context;
         private readonly GeocodeService _geocodeService;
+        private readonly ILogger<ForskolanController> _logger;
 
-        public ForskolanController(MrDb context, GeocodeService geocodeService)
+        public ForskolanController(MrDb context, GeocodeService geocodeService, ILogger<ForskolanController> logger)
         {
             _context = context;
             _geocodeService = geocodeService;
+            _logger = logger;
         }
 
         // GET: api/Forskolan
@@ -72,13 +75,21 @@ namespace MasterKinder.Controllers
         [HttpGet("geocode/{address}")]
         public async Task<ActionResult<GeocodeResult>> GeocodeAddress(string address)
         {
-            var coordinates = await _geocodeService.GeocodeAddress(address);
-            if (coordinates == null)
+            try
             {
-                return NotFound();
-            }
+                var coordinates = await _geocodeService.GeocodeAddress(address);
+                if (coordinates == null)
+                {
+                    return NotFound("Geocoding failed.");
+                }
 
-            return Ok(coordinates);
+                return Ok(coordinates);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error in geocoding address: {address}");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         // PUT: api/Forskolan/{id}
@@ -160,21 +171,6 @@ namespace MasterKinder.Controllers
                 .ToList();
 
             return Ok(sortedForskolans);
-        }
-        // GET: api/Forskolan/search/{query}
-        [HttpGet("search/{query}")]
-        public async Task<ActionResult<IEnumerable<Forskolan>>> SearchForskolans(string query)
-        {
-            var forskolans = await _context.Forskolans
-                .Where(f => f.Namn.Contains(query))
-                .ToListAsync();
-
-            if (forskolans == null || forskolans.Count == 0)
-            {
-                return NotFound("No preschools found for the given query.");
-            }
-
-            return Ok(forskolans);
         }
 
 
