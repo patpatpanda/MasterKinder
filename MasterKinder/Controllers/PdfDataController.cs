@@ -30,7 +30,7 @@ namespace MasterKinder.Controllers
         [HttpGet("normalized-name/{name}")]
         public async Task<IActionResult> GetPdfDataByNormalizedName(string name)
         {
-            var normalizedName = name.ToLower();
+            var normalizedName = NormalizeName(name);
             var pdfData = await _context.PdfData
                 .Where(p => p.NormalizedNamn == normalizedName)
                 .ToListAsync();
@@ -42,6 +42,7 @@ namespace MasterKinder.Controllers
 
             return Ok(pdfData);
         }
+
 
 
 
@@ -136,5 +137,22 @@ namespace MasterKinder.Controllers
         {
             return _context.PdfData.Any(e => e.Id == id);
         }
+
+        public static string NormalizeName(string name)
+        {
+            string normalizedName = name
+                .Replace("Förskola ", "")
+                .Replace("Förskolan ", "")
+                .Replace("Föräldrakooperativet ", "")
+                .Replace("Föräldrakooperativ ", "")
+                .Replace("Daghemmet ", "")
+                .Replace("Daghem ", "")
+                .Replace("Barnstugan ", "")
+                .Trim()
+                .ToLower();
+
+            return normalizedName;
+        }
+
     }
 }

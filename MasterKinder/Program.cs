@@ -21,11 +21,8 @@ builder.Services.AddControllers()
 builder.Services.AddDbContext<MrDb>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultSQLConnection")));
 
-
 builder.Services.AddMemoryCache(); // Lägg till denna rad för att registrera IMemoryCache
-
 builder.Services.AddHttpClient<GeocodeService>();
-
 
 // Add CORS policy
 builder.Services.AddCors(options =>
@@ -54,6 +51,7 @@ app.UseCors("AllowAll"); // Make sure CORS is used
 app.UseAuthorization();
 
 app.MapControllers(); // Enable API routes
+app.MapRazorPages(); // Enable Razor Pages
 
 // Serve the React app's index.html as a fallback for all other routes
 app.MapFallbackToFile("/index.html");
