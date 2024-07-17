@@ -1,0 +1,68 @@
+﻿body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    width: 80%;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.blog-header {
+    text-align: center;
+    padding: 20px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+    .blog-header h1 {
+        margin: 0;
+        font-size: 2.5em;
+        color: #333;
+    }
+
+.intro {
+    text-align: center;
+    padding: 20px 0;
+}
+
+    .intro p {
+        font-size: 1.2em;
+        color: #666;
+    }
+
+.posts {
+    margin-top: 20px;
+}
+
+.post {
+    padding: 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+    .post h2 {
+        margin-top: 0;
+        color: #333;
+    }
+
+    .post p {
+        color: #666;
+    }
+
+.blog-footer {
+    text-align: center;
+    padding: 20px 0;
+    border-top: 1px solid #ddd;
+    margin-top: 20px;
+}
+
+    .blog-footer p {
+        margin: 0;
+        font-size: 0.9em;
+        color: #666;
+    }
