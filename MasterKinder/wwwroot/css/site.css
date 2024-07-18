@@ -1,4 +1,4 @@
-html {
+/*html {
     font-size: 14px;
 }
 
@@ -185,15 +185,15 @@ form {
     width: 35%;
     margin-left: 2%;
     overflow: auto;
-    background-color: rgba(255, 255, 255, 0.8); /* Light background for better readability */
-    color: #000; /* Dark text for better contrast */
-    padding: 10px; /* Padding for better spacing */
-    border-radius: 5px; /* Rounded corners */
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Slight shadow for better distinction */
-}
+    background-color: rgba(255, 255, 255, 0.8);*/ /* Light background for better readability */
+    /*color: #000;*/ /* Dark text for better contrast */
+    /*padding: 10px;*/ /* Padding for better spacing */
+    /*border-radius: 5px;*/ /* Rounded corners */
+    /*box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);*/ /* Slight shadow for better distinction */
+/*}*/
 
 /* Gör layouten responsiv */
-@media (max-width: 768px) {
+/*@media (max-width: 768px) {
     .map-container {
         flex-direction: column;
     }
@@ -254,4 +254,4 @@ form {
 .styled-button:focus {
     outline: none;
     box-shadow: 0 0 10px rgba(69, 160, 73, 0.5);
-}
+}*/

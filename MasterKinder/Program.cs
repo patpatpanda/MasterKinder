@@ -1,5 +1,6 @@
 using MasterKinder.Data;
 using MasterKinder.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
@@ -21,7 +22,11 @@ builder.Services.AddControllers()
 builder.Services.AddDbContext<MrDb>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultSQLConnection")));
 
-builder.Services.AddMemoryCache(); // L�gg till denna rad f�r att registrera IMemoryCache
+builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddEntityFrameworkStores<MrDb>();
+
+builder.Services.AddMemoryCache(); // Lägg till denna rad för att registrera IMemoryCache
+
 builder.Services.AddHttpClient<GeocodeService>();
 
 // Add CORS policy
@@ -48,10 +53,11 @@ app.UseHttpsRedirection();
 app.UseStaticFiles(); // Serve static files from wwwroot
 app.UseRouting();
 app.UseCors("AllowAll"); // Make sure CORS is used
+app.UseAuthentication(); // Lägg till detta för att aktivera autentisering
 app.UseAuthorization();
 
+
 app.MapControllers(); // Enable API routes
-app.MapRazorPages(); // Enable Razor Pages
 
 // Serve the React app's index.html as a fallback for all other routes
 app.MapFallbackToFile("/index.html");
