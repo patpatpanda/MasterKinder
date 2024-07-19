@@ -6,6 +6,7 @@ using MasterKinder.Models;
 
 namespace MasterKinder.Pages.Blog
 {
+    
     public class IndexModel : PageModel
     {
         private readonly MrDb _context;
