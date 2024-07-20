@@ -8,10 +8,15 @@
 
   <ItemGroup>
     <None Include="wwwroot\static\css\main.dad7e376.css.map" />
+    <None Include="wwwroot\static\css\main.eecf20bb.css.map" />
     <None Include="wwwroot\static\js\453.eb2727c2.chunk.js" />
     <None Include="wwwroot\static\js\453.eb2727c2.chunk.js.map" />
+    <None Include="wwwroot\static\js\845.024e388e.chunk.js" />
+    <None Include="wwwroot\static\js\845.024e388e.chunk.js.map" />
     <None Include="wwwroot\static\js\main.298410ac.js" />
     <None Include="wwwroot\static\js\main.298410ac.js.map" />
+    <None Include="wwwroot\static\js\main.817e2237.js" />
+    <None Include="wwwroot\static\js\main.817e2237.js.map" />
     <None Include="wwwroot\static\media\yeye.d16b4e0cf94f8bc86405.webp" />
   </ItemGroup>
 

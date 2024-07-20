@@ -1,0 +1,31 @@
+﻿@page
+@model Blog.CreateModel
+@{
+    ViewData["Title"] = "Create Blog Post";
+}
+
+<h1>Create Blog Post</h1>
+
+<form method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <label asp-for="PostBlog.Title"></label>
+        <input asp-for="PostBlog.Title" class="form-control" />
+        <span asp-validation-for="PostBlog.Title" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="PostBlog.Content"></label>
+        <textarea asp-for="PostBlog.Content" class="form-control"></textarea>
+        <span asp-validation-for="PostBlog.Content" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="PostBlog.PublishedDate"></label>
+        <input asp-for="PostBlog.PublishedDate" class="form-control" type="date" />
+        <span asp-validation-for="PostBlog.PublishedDate" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Image"></label>
+        <input type="file" asp-for="Image" class="form-control" />
+        <span asp-validation-for="Image" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Create</button>
+</form>

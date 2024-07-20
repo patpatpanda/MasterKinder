@@ -6,7 +6,6 @@ using MasterKinder.Models;
 
 namespace MasterKinder.Pages.Blog
 {
-    
     public class IndexModel : PageModel
     {
         private readonly MrDb _context;
@@ -16,11 +15,11 @@ namespace MasterKinder.Pages.Blog
             _context = context;
         }
 
-        public List<BlogPost> BlogPosts { get; set; }
+        public List<PostBlog> PostBlogs { get; set; }
 
         public void OnGet()
         {
-            BlogPosts = _context.BlogPosts.OrderByDescending(post => post.PublishedDate).ToList();
+            PostBlogs = _context.PostBlogs.ToList();
         }
     }
 }
