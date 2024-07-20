@@ -15,8 +15,12 @@
     <None Include="wwwroot\static\js\845.024e388e.chunk.js.map" />
     <None Include="wwwroot\static\js\main.298410ac.js" />
     <None Include="wwwroot\static\js\main.298410ac.js.map" />
+    <None Include="wwwroot\static\js\main.7413e79f.js" />
+    <None Include="wwwroot\static\js\main.7413e79f.js.map" />
     <None Include="wwwroot\static\js\main.817e2237.js" />
     <None Include="wwwroot\static\js\main.817e2237.js.map" />
+    <None Include="wwwroot\static\js\main.d6c1e8b1.js" />
+    <None Include="wwwroot\static\js\main.d6c1e8b1.js.map" />
     <None Include="wwwroot\static\media\yeye.d16b4e0cf94f8bc86405.webp" />
   </ItemGroup>
 
