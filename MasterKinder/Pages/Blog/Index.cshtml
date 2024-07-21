@@ -5,11 +5,11 @@
 }
 
 <div class="jumbotron">
-    <h1 class="display-4">Välkommen till Bloggen!</h1>
-    <p class="lead"></p>
+    <h3 class="display-4">Välkommen!</h3>
+   
     @if (User.Identity.IsAuthenticated)
     {
-        <a class="btn btn-primary btn-lg" href="@Url.Page("Create")" role="button">Create New Post</a>
+        <a class="btn btn-primary btn-lg" href="@Url.Page("Create")" role="button">Skapa nytt inlägg</a>
     }
 </div>
 
