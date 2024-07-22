@@ -7,20 +7,31 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="wwwroot\static\css\main.13e5095b.css.map" />
     <None Include="wwwroot\static\css\main.26772185.css.map" />
     <None Include="wwwroot\static\css\main.414d7ab5.css.map" />
+    <None Include="wwwroot\static\css\main.698fc3c9.css.map" />
     <None Include="wwwroot\static\css\main.9da720c8.css.map" />
+    <None Include="wwwroot\static\css\main.a01cc8da.css.map" />
     <None Include="wwwroot\static\css\main.a2f946b9.css.map" />
+    <None Include="wwwroot\static\css\main.bcc11ec3.css.map" />
     <None Include="wwwroot\static\css\main.dad7e376.css.map" />
     <None Include="wwwroot\static\css\main.eecf20bb.css.map" />
+    <None Include="wwwroot\static\css\main.f2ee9d71.css.map" />
     <None Include="wwwroot\static\js\453.eb2727c2.chunk.js" />
     <None Include="wwwroot\static\js\453.eb2727c2.chunk.js.map" />
     <None Include="wwwroot\static\js\845.024e388e.chunk.js" />
     <None Include="wwwroot\static\js\845.024e388e.chunk.js.map" />
+    <None Include="wwwroot\static\js\main.1c614309.js" />
+    <None Include="wwwroot\static\js\main.1c614309.js.map" />
     <None Include="wwwroot\static\js\main.298410ac.js" />
     <None Include="wwwroot\static\js\main.298410ac.js.map" />
+    <None Include="wwwroot\static\js\main.2bab1367.js" />
+    <None Include="wwwroot\static\js\main.2bab1367.js.map" />
     <None Include="wwwroot\static\js\main.49e8658b.js" />
     <None Include="wwwroot\static\js\main.49e8658b.js.map" />
+    <None Include="wwwroot\static\js\main.4af7069a.js" />
+    <None Include="wwwroot\static\js\main.4af7069a.js.map" />
     <None Include="wwwroot\static\js\main.7413e79f.js" />
     <None Include="wwwroot\static\js\main.7413e79f.js.map" />
     <None Include="wwwroot\static\js\main.817e2237.js" />
@@ -29,6 +40,10 @@
     <None Include="wwwroot\static\js\main.d6c1e8b1.js.map" />
     <None Include="wwwroot\static\js\main.d71387dd.js" />
     <None Include="wwwroot\static\js\main.d71387dd.js.map" />
+    <None Include="wwwroot\static\js\main.d8ddcfea.js" />
+    <None Include="wwwroot\static\js\main.d8ddcfea.js.map" />
+    <None Include="wwwroot\static\js\main.e2bf81a0.js" />
+    <None Include="wwwroot\static\js\main.e2bf81a0.js.map" />
     <None Include="wwwroot\static\media\ste.f75e23367251b97803c6.webp" />
     <None Include="wwwroot\static\media\yeye.d16b4e0cf94f8bc86405.webp" />
   </ItemGroup>

@@ -140,16 +140,17 @@ namespace MasterKinder.Controllers
 
         [HttpGet("nearby/{lat}/{lng}")]
         public async Task<ActionResult<IEnumerable<Forskolan>>> GetNearbyForskolans(
-            double lat, double lng,
-            [FromQuery] string organisationsform = "alla",
-            [FromQuery] string typAvService = "alla")
+      double lat, double lng,
+      [FromQuery] string organisationsform = "alla",
+      [FromQuery] string typAvService = "alla")
         {
             var forskolans = await _context.Forskolans.ToListAsync();
 
             // Filtrera baserat på organisationsform
             if (!string.IsNullOrEmpty(organisationsform) && organisationsform.ToLower() != "alla")
             {
-                forskolans = forskolans.Where(f => f.Organisationsform.Equals(organisationsform, StringComparison.OrdinalIgnoreCase)).ToList();
+                var orgForms = organisationsform.Split(',').Select(o => o.Trim()).ToList();
+                forskolans = forskolans.Where(f => orgForms.Contains(f.Organisationsform, StringComparer.OrdinalIgnoreCase)).ToList();
             }
 
             // Filtrera baserat på typ av service
@@ -172,6 +173,8 @@ namespace MasterKinder.Controllers
 
             return Ok(sortedForskolans);
         }
+
+
 
 
         [HttpGet("walking-time")]
