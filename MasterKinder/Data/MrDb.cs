@@ -16,8 +16,10 @@ namespace MasterKinder.Data
         public DbSet<Forskolan> Forskolans { get; set; }
         public DbSet<KontaktInfo> kontaktInfos { get; set; }
         public DbSet<PdfData> PdfData { get; set; }
-        
+        public DbSet<PdfAllData> PdfAllData { get; set; }
+
         public DbSet<PostBlog> PostBlogs { get; set; }
+        public DbSet<SurveyResult> SurveyResults { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

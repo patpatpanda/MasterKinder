@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using MasterKinder.Models;
 
@@ -49,46 +50,55 @@ public class PdfScrapingService
         {
             for (int i = 1; i <= reader.NumberOfPages; i++)
             {
-                pdfText += PdfTextExtractor.GetTextFromPage(reader, i);
+                string pageText = PdfTextExtractor.GetTextFromPage(reader, i);
+                if (i >= 27 && !ContainsSpindeldiagram(pageText)) // Start extracting from page 27
+                {
+                    pdfText += pageText;
+                }
+                else
+                {
+                    Console.WriteLine($"Skipped page {i} due to spindeldiagram or it's before page 27.");
+                }
             }
         }
 
         return pdfText;
     }
 
-    public void SavePdfDataToDatabase(PdfData pdfData)
+    private bool ContainsSpindeldiagram(string pageText)
+    {
+        // Logic to identify pages with spindeldiagram, this is a placeholder.
+        // You can update this based on specific keywords or patterns that identify a spindeldiagram page.
+        return pageText.Contains("Spindeldiagram", StringComparison.OrdinalIgnoreCase);
+    }
+
+    public void SaveSurveyResultToDatabase(SurveyResult surveyResult)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(pdfData.Namn))
-            {
-                throw new InvalidOperationException("Namn cannot be null or empty.");
-            }
-
-            if (string.IsNullOrWhiteSpace(pdfData.Helhetsomdome))
-            {
-                throw new InvalidOperationException("Helhetsomdome cannot be null or empty.");
-            }
-
-            var existingEntry = _dbContext.PdfData.FirstOrDefault(p => p.Namn == pdfData.Namn && p.AntalSvar == pdfData.AntalSvar);
+            var existingEntry = _dbContext.SurveyResults.FirstOrDefault(p =>
+                p.AvserAr == surveyResult.AvserAr &&
+                p.Forskolenhet == surveyResult.Forskolenhet &&
+                p.FragaNr == surveyResult.FragaNr &&
+                p.SvarsalternativNr == surveyResult.SvarsalternativNr);
             if (existingEntry == null)
             {
-                _dbContext.PdfData.Add(pdfData);
+                _dbContext.SurveyResults.Add(surveyResult);
                 _dbContext.SaveChanges();
-                Console.WriteLine($"Saved PDF data for {pdfData.Namn} to the database.");
+                Console.WriteLine($"Saved survey result for {surveyResult.Forskolenhet} to the database.");
             }
             else
             {
-                Console.WriteLine($"Duplicate entry found for {pdfData.Namn} with {pdfData.AntalSvar} responses, skipping save.");
+                Console.WriteLine($"Duplicate entry found for {surveyResult.Forskolenhet} with question number {surveyResult.FragaNr} and answer number {surveyResult.SvarsalternativNr}, skipping save.");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"An error occurred while saving PDF data to the database: {ex.Message}");
+            Console.WriteLine($"An error occurred while saving survey result to the database: {ex.Message}");
         }
     }
 
-    public async Task ScrapeAndSavePdfData(string url)
+    public async Task ScrapeAndSaveSurveyData(string url)
     {
         var pdfLinks = await ScrapePdfLinksAsync(url);
 
@@ -99,8 +109,11 @@ public class PdfScrapingService
                 var pdfText = await DownloadAndExtractPdfText(pdfLink);
                 if (!string.IsNullOrEmpty(pdfText))
                 {
-                    var pdfData = ExtractDataFromText(pdfText);
-                    SavePdfDataToDatabase(pdfData);
+                    var surveyResults = ExtractDataFromText(pdfText);
+                    foreach (var result in surveyResults)
+                    {
+                        SaveSurveyResultToDatabase(result);
+                    }
                 }
             }
             catch (Exception ex)
@@ -110,9 +123,9 @@ public class PdfScrapingService
         }
     }
 
-    public PdfData ExtractDataFromText(string pdfText)
+    public List<SurveyResult> ExtractDataFromText(string pdfText)
     {
-        var pdfData = new PdfData();
+        var surveyResults = new List<SurveyResult>();
         var lines = pdfText.Split('\n').Select(line => line.Trim()).ToList();
 
         // Log first few lines for initial debugging
@@ -122,16 +135,26 @@ public class PdfScrapingService
             Console.WriteLine(lines[i]);
         }
 
-        // Extracting the name
-        var nameIndex = lines.FindIndex(line => line.Contains("Vårdnadshavare Förskola") || line.Contains("Vårdnadshavare Familjedaghem"));
+        var pdfData = new SurveyResult
+        {
+            FragaOmradeText = "Standard text",  // Assign a default value to FragaOmradeText
+            Forskoleverksamhet = "Standard verksamhet", // Assign a default value to Forskoleverksamhet
+            ResultatkategoriKod = "Default",
+            ResultatkategoriNamn = "Default",
+            Stadsdelsnamnd = "Default",
+            RegiformNamn = "Default",
+            EnkatRoll = "Default",
+            RespondentRoll = "Default",
+            Kon = "Default"
+        };
+
+        // Extracting the name and general info
+        var nameIndex = lines.FindIndex(line => line.Contains("Vårdnadshavare Förskola"));
         if (nameIndex != -1 && nameIndex + 1 < lines.Count)
         {
-            pdfData.Namn = lines[nameIndex + 1].Trim();
-            Console.WriteLine($"Extracted name: {pdfData.Namn}");
+            pdfData.Forskolenhet = lines[nameIndex + 1].Trim();
         }
-
-
-        if (string.IsNullOrWhiteSpace(pdfData.Namn))
+        else
         {
             Console.WriteLine("Failed to extract name. PDF text:");
             for (int i = 0; i < lines.Count; i++)
@@ -141,50 +164,96 @@ public class PdfScrapingService
             throw new InvalidOperationException("Namn cannot be null or empty.");
         }
 
-        // Extract overall rating (Helhetsomdome)
-        var helhetsomdomeLineIndex = lines.FindIndex(line => line.Contains("HELHETSOMDÖME"));
+        // Extract overall rating (Helhetsomdome) and response rate
+        var helhetsomdomeLineIndex = lines.FindIndex(line => line.Contains("Genomförd av Origo Group"));
         if (helhetsomdomeLineIndex != -1 && helhetsomdomeLineIndex + 1 < lines.Count)
         {
-            pdfData.Helhetsomdome = lines[helhetsomdomeLineIndex + 1].Trim();
-            Console.WriteLine($"Extracted helhetsomdome: {pdfData.Helhetsomdome}");
-        }
-        else
-        {
-            // Log additional lines for debugging if the expected line is not found
-            Console.WriteLine("Failed to extract helhetsomdome. PDF text:");
-            for (int i = 0; i < lines.Count; i++)
+            var responseLine = lines[helhetsomdomeLineIndex + 1];
+            var responseParts = responseLine.Split(new[] { ',', '%' }, StringSplitOptions.RemoveEmptyEntries);
+            if (responseParts.Length >= 2)
             {
-                Console.WriteLine(lines[i]);
+                pdfData.Utfall = ParseNullableDouble(responseParts[1]);
+                pdfData.TotalVarde = ParseNullableDouble(responseParts[0]);
+                Console.WriteLine($"Extracted helhetsomdome: {pdfData.Utfall}, response rate: {pdfData.TotalVarde}");
             }
-            throw new InvalidOperationException("Helhetsomdome cannot be null or empty.");
+            else
+            {
+                Console.WriteLine("Failed to extract helhetsomdome and response rate.");
+            }
         }
 
-        // Extract response rate and number of responses
-        var svarsfrekvensLineIndex = lines.FindIndex(line => line.Contains("svar") && line.Contains("%"));
-        if (svarsfrekvensLineIndex != -1)
-        {
-            var svarsfrekvensLine = lines[svarsfrekvensLineIndex];
-            var delar = svarsfrekvensLine.Split(',');
-            if (delar.Length > 1)
-            {
-                pdfData.Svarsfrekvens = int.Parse(delar[1].Replace("%", "").Trim());
-                pdfData.AntalSvar = int.Parse(delar[0].Split(' ')[0].Trim());
-                Console.WriteLine($"Extracted svarsfrekvens: {pdfData.Svarsfrekvens}, antal svar: {pdfData.AntalSvar}");
-            }
-        }
-        else
-        {
-            // Log additional lines for debugging if the expected line is not found
-            Console.WriteLine("Failed to extract svarsfrekvens. PDF text:");
-            for (int i = 0; i < lines.Count; i++)
-            {
-                Console.WriteLine(lines[i]);
-            }
-            throw new InvalidOperationException("Svarsfrekvens and AntalSvar cannot be null or empty.");
-        }
+        // Extract other data points starting from page 27
+        ExtractAndAssignPercentage(pdfData, lines, "Jag upplever att mitt barn utvecklas och lär i förskolan", nameof(pdfData.FragaNr1));
+        ExtractAndAssignPercentage(pdfData, lines, "Jag upplever att mitt barns språkliga förmåga utvecklas i förskolan", nameof(pdfData.FragaNr2));
+        ExtractAndAssignPercentage(pdfData, lines, "Jag upplever att mitt barn får det stöd som behövs i förskolan", nameof(pdfData.FragaNr3));
+        ExtractAndAssignPercentage(pdfData, lines, "Jag upplever att förskolan bidrar till att mitt barn visar ett intresse för hållbar utveckling", nameof(pdfData.FragaNr4));
+        ExtractAndAssignPercentage(pdfData, lines, "Jag får information om mitt barns utveckling och lärande", nameof(pdfData.FragaNr5));
+        ExtractAndAssignPercentage(pdfData, lines, "Jag upplever att mitt barn känner sig tryggt på förskolan", nameof(pdfData.FragaNr6));
+        ExtractAndAssignPercentage(pdfData, lines, "Jag upplever att förskolan bidrar till att mitt barn utvecklar förmåga till empati, tolerans och omtanke", nameof(pdfData.FragaNr7));
+        ExtractAndAssignPercentage(pdfData, lines, "Jag upplever att personalen visar omsorg om mitt barn", nameof(pdfData.FragaNr8));
+        ExtractAndAssignPercentage(pdfData, lines, "Jag upplever att förskolan bidrar till att mitt barn utvecklar en positiv bild av sig själv", nameof(pdfData.FragaNr9));
+        ExtractAndAssignPercentage(pdfData, lines, "Jag upplever att förskolan medvetet främjar alla barns möjligheter att utvecklas på lika villkor oavsett kön", nameof(pdfData.FragaNr10));
+        ExtractAndAssignPercentage(pdfData, lines, "Jag upplever att förskolans ledning är tillgängliga vid behov", nameof(pdfData.FragaNr11));
+        ExtractAndAssignPercentage(pdfData, lines, "Jag upplever att personalen bemöter mig på ett sätt som skapar förtroende och tillit", nameof(pdfData.FragaNr12));
+        ExtractAndAssignPercentage(pdfData, lines, "Jag är nöjd med informationen jag får om maten som serveras på förskolan", nameof(pdfData.FragaNr13));
+        ExtractAndAssignPercentage(pdfData, lines, "Jag upplever att förskolan bidrar till att mitt barn dagligen deltar i fysiska aktiviteter", nameof(pdfData.FragaNr14));
 
-        return pdfData;
+        surveyResults.Add(pdfData);
+
+        return surveyResults;
     }
+
+    private void ExtractAndAssignPercentage(SurveyResult surveyResult, List<string> lines, string question, string propertyName)
+    {
+        var index = lines.FindIndex(line => line.Contains(question, StringComparison.OrdinalIgnoreCase));
+        if (index != -1)
+        {
+            // Search for a percentage within the next few lines
+            for (int i = index + 1; i < Math.Min(index + 6, lines.Count); i++)
+            {
+                if (lines[i].Contains("instämmer (%)", StringComparison.OrdinalIgnoreCase))
+                {
+                    var percentageMatch = Regex.Match(lines[i + 1], @"(\d+)");
+                    if (percentageMatch.Success)
+                    {
+                        var percentage = double.Parse(percentageMatch.Value.Trim());
+                        var property = surveyResult.GetType().GetProperty(propertyName);
+                        if (property != null && property.PropertyType == typeof(double?))
+                        {
+                            property.SetValue(surveyResult, percentage);
+                            Console.WriteLine($"Extracted percentage for field: {question} - {percentage}%");
+                        }
+                        return;
+                    }
+                }
+            }
+        }
+
+        Console.WriteLine($"Failed to extract percentage for field: {question}");
+    }
+
+    private int? ParseNullableInt(string input)
+    {
+        if (int.TryParse(input, out int result))
+        {
+            return result;
+        }
+        return null;
+    }
+
+    private double? ParseNullableDouble(string input)
+    {
+        if (double.TryParse(input, out double result))
+        {
+            return result;
+        }
+        return null;
+    }
+
+    private string ParseString(string input)
+    {
+        return string.IsNullOrWhiteSpace(input) ? null : input;
+    }
+
+
 }
-
-

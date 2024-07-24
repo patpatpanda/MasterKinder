@@ -1,17 +1,12 @@
-﻿using KinderReader;
-using MasterKinder.Data;
-using MasterKinder.Models;
+﻿using MasterKinder.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json.Linq;
 using System;
-using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Collections.Generic;
+using KinderReader;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,8 +18,9 @@ builder.Services.AddDbContext<MrDb>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultSQLConnection")));
 
-// Add the scraper service
-builder.Services.AddScoped<Scraper>();
+// Add the scraper services
+builder.Services.AddScoped<GoScraper>();
+builder.Services.AddScoped<PdfScrapingService>();
 
 // Add HttpClient for making API requests
 builder.Services.AddHttpClient();
@@ -61,9 +57,7 @@ async Task MainMethod(IServiceProvider services)
     Console.WriteLine($"Total number of Forskolans: {totalForskolans}");
 
     // Exempel på att köra skrapning och andra operationer
-    await RunScraperAsync(services, 10987, 10988);
-   
-   
+    await RunScraperAsync(services);
 }
 
 async Task<int> CountAllForskolansAsync(IServiceProvider services)
@@ -73,48 +67,20 @@ async Task<int> CountAllForskolansAsync(IServiceProvider services)
     return await context.Forskolans.CountAsync();
 }
 
-async Task RunScraperAsync(IServiceProvider services, int startId, int endId)
+async Task RunScraperAsync(IServiceProvider services)
 {
     using var scope = services.CreateScope();
-    var scraper = scope.ServiceProvider.GetRequiredService<Scraper>();
+    var scraper = scope.ServiceProvider.GetRequiredService<GoScraper>();
 
-    int batchSize = 5; // Antal sidor per omgång
-    int maxEmptyPages = 50; // Max antal tomma sidor innan avbrott
-    int emptyPageCount = 0;
-    int totalEmptyPages = 0; // Totalt antal tomma sidor
+    // Skrapa PDF-filer från den angivna URLen
+    bool isSuccess = await scraper.Scrape(0);
 
-    for (int batchStart = startId; batchStart <= endId; batchStart += batchSize)
+    if (isSuccess)
     {
-        int batchEnd = Math.Min(batchStart + batchSize - 1, endId);
-
-        for (int id = batchStart; id <= batchEnd; id++)
-        {
-            bool isSuccess = await scraper.Scrape(id);
-
-            if (!isSuccess)
-            {
-                emptyPageCount++;
-                totalEmptyPages++;
-                Console.WriteLine($"Empty page count: {emptyPageCount} (Total empty pages: {totalEmptyPages})");
-            }
-            else
-            {
-                emptyPageCount = 0; // Återställ räknaren om en sida har innehåll
-            }
-
-            // Om vi har nått max antal tomma sidor, sluta skrapa
-            if (totalEmptyPages >= maxEmptyPages)
-            {
-                Console.WriteLine($"Max empty pages reached. Stopping scraper at ID: {id}.");
-                return;
-            }
-
-            // Valfri fördröjning för att minska belastningen på servern
-            await Task.Delay(100); // 100 ms fördröjning
-        }
-
-        Console.WriteLine($"Completed batch from ID: {batchStart} to ID: {batchEnd}. Restarting process.");
+        Console.WriteLine("PDF scraping and saving completed successfully.");
     }
-
-    Console.WriteLine("Scraping process completed.");
+    else
+    {
+        Console.WriteLine("PDF scraping failed.");
+    }
 }

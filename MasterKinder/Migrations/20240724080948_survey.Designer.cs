@@ -4,6 +4,7 @@ using MasterKinder.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MasterKinder.Migrations
 {
     [DbContext(typeof(MrDb))]
-    partial class MrDbModelSnapshot : ModelSnapshot
+    [Migration("20240724080948_survey")]
+    partial class survey
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -304,9 +307,11 @@ namespace MasterKinder.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("EnkatRoll")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Forskolenhet")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Forskoleverksamhet")
@@ -314,52 +319,11 @@ namespace MasterKinder.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FragaKategori")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("FragaNr")
                         .HasColumnType("int");
-
-                    b.Property<double?>("FragaNr1")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("FragaNr10")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("FragaNr11")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("FragaNr12")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("FragaNr13")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("FragaNr14")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("FragaNr2")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("FragaNr3")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("FragaNr4")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("FragaNr5")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("FragaNr6")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("FragaNr7")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("FragaNr8")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("FragaNr9")
-                        .HasColumnType("float");
 
                     b.Property<int?>("FragaOmradeNr")
                         .HasColumnType("int");
@@ -369,45 +333,57 @@ namespace MasterKinder.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FragaText")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FragaTyp")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("GraderingSvarsalternativ")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Kon")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("KortFragaText")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("Organisatoriskenhetskod")
                         .HasColumnType("int");
 
                     b.Property<string>("RegiformNamn")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RespondentRoll")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ResultatkategoriKod")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ResultatkategoriNamn")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Stadsdelsnamnd")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("SvarsalternativNr")
                         .HasColumnType("int");
 
                     b.Property<string>("SvarsalternativText")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SvarsalternativTyp")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<double?>("TotalVarde")
