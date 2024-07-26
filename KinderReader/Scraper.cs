@@ -22,30 +22,19 @@ public class Scraper
         _httpClient = new HttpClient();
     }
 
-    public async Task<bool> Scrape(int id)
+    public async Task Scrape(int startId, int endId)
     {
-        string[] urls = {
-        $"https://forskola.stockholm/hitta-forskola/forskola/{id}",
-        $"https://forskola.stockholm/hitta-forskola/pedagogisk-omsorg/{id}"
-    };
-
-        foreach (var url in urls)
+        for (int id = startId; id <= endId; id++)
         {
             try
             {
+                var url = $"https://forskola.stockholm/hitta-forskola/forskola/{id}";
                 var response = await _httpClient.GetAsync(url);
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
                     var document = new HtmlDocument();
                     document.LoadHtml(content);
-
-                    // Kontrollera om sidan är tom genom att kontrollera ett specifikt element som borde finnas
-                    if (string.IsNullOrWhiteSpace(GetInnerText(document, "//h1")))
-                    {
-                        Console.WriteLine($"No content found for ID: {id} from URL: {url}. Skipping.");
-                        continue;
-                    }
 
                     var forskolan = new Forskolan
                     {
@@ -66,7 +55,7 @@ public class Scraper
                         MerOmOss = HtmlDecode(GetInnerText(document, "//h2[contains(text(), 'Mer om oss')]/following-sibling::p"))
                     };
 
-                    var contacts = document.DocumentNode.SelectNodes("//li[p[contains(text(), 'Rektor')]    or p[contains(text(), 'Huvudman')] or p[contains(text(), 'Biträdande rektor')] or p[contains(text(), 'Dagbarnvårdare')] or p[contains(text(), 'Visningsansvarig')] or p[contains(text(), 'Förskolan')] or p[contains(text(), 'Arbetsplatsledare')]]");
+                    var contacts = document.DocumentNode.SelectNodes("//li[p[contains(text(), 'Rektor')] or p[contains(text(), 'Verksamhetschef')] or p[contains(text(), 'Huvudman')] or p[contains(text(), 'Biträdande rektor')] or p[contains(text(), 'Dagbarnvårdare')] or p[contains(text(), 'Visningsansvarig')]]");
 
                     if (contacts != null)
                     {
@@ -93,30 +82,23 @@ public class Scraper
 
                     _context.Forskolans.Add(forskolan);
                     await _context.SaveChangesAsync();
-                    Console.WriteLine($"Successfully saved data for ID: {id} from URL: {url}");
-                    return true; // Indikerar att skrapningen lyckades
+                    Console.WriteLine($"Successfully saved data for ID: {id}");
                 }
                 else if (response.StatusCode == HttpStatusCode.NotFound)
                 {
-                    Console.WriteLine($"ID: {id} not found (404) at URL: {url}. Skipping.");
-                    continue;
+                    Console.WriteLine($"ID: {id} not found (404). Skipping.");
                 }
                 else
                 {
-                    Console.WriteLine($"Failed to fetch data for ID: {id} from URL: {url} with status code: {response.StatusCode}");
+                    Console.WriteLine($"Failed to fetch data for ID: {id} with status code: {response.StatusCode}");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error processing ID: {id} from URL: {url}, Exception: {ex.Message}");
+                Console.WriteLine($"Error processing ID: {id}, Exception: {ex.Message}");
             }
         }
-
-        return false; // Indikerar att skrapningen misslyckades eller sidan var tom
     }
-
-
-
 
     private string GetInnerText(HtmlDocument document, string xpath)
     {

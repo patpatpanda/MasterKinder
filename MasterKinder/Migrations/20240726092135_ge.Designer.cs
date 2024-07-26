@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MasterKinder.Migrations
 {
     [DbContext(typeof(MrDb))]
-    [Migration("20240720080904_igen")]
-    partial class igen
+    [Migration("20240726092135_ge")]
+    partial class ge
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -53,34 +53,6 @@ namespace MasterKinder.Migrations
                     b.HasIndex("ForskolanId");
 
                     b.ToTable("kontaktInfos");
-                });
-
-            modelBuilder.Entity("MasterKinder.Models.BlogPost", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("PublishedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("BlogPosts");
                 });
 
             modelBuilder.Entity("MasterKinder.Models.Forskolan", b =>
@@ -147,7 +119,7 @@ namespace MasterKinder.Migrations
                     b.ToTable("Forskolans");
                 });
 
-            modelBuilder.Entity("MasterKinder.Models.PdfData", b =>
+            modelBuilder.Entity("MasterKinder.Models.Malibu", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -155,8 +127,15 @@ namespace MasterKinder.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("AndelInstammer")
+                        .HasColumnType("int");
+
                     b.Property<int>("AntalSvar")
                         .HasColumnType("int");
+
+                    b.Property<string>("FrageText")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Helhetsomdome")
                         .IsRequired()
@@ -167,7 +146,49 @@ namespace MasterKinder.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NormalizedNamn")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Svarsfrekvens")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Malibus");
+                });
+
+            modelBuilder.Entity("MasterKinder.Models.PdfDataAll", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AntalSvar")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FrageText")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Helhetsomdome")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Instammer")
+                        .HasColumnType("int");
+
+                    b.Property<int>("InstammerHelt")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Namn")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NormalizedNamn")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Svarsfrekvens")
@@ -175,7 +196,34 @@ namespace MasterKinder.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PdfData");
+                    b.ToTable("PdfDataAlls");
+                });
+
+            modelBuilder.Entity("MasterKinder.Models.PostBlog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("PublishedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PostBlogs");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -378,6 +426,46 @@ namespace MasterKinder.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("PdfData", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AntalSvar")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FrageText")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Helhetsomdome")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Instammer")
+                        .HasColumnType("int");
+
+                    b.Property<int>("InstammerHelt")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Namn")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NormalizedNamn")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Svarsfrekvens")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PdfData");
                 });
 
             modelBuilder.Entity("KinderReader.Models.KontaktInfo", b =>

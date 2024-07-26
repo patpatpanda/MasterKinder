@@ -3,24 +3,21 @@ using Microsoft.EntityFrameworkCore;
 using MasterKinder.Models;
 using KinderReader.Models;
 using Microsoft.AspNetCore.Identity;
+using static MasterKinder.Models.MyModels;
 
 namespace MasterKinder.Data
 {
     public class MrDb : IdentityDbContext<IdentityUser>
     {
-        public MrDb(DbContextOptions<MrDb> options)
-            : base(options)
-        {
-        }
+        public MrDb(DbContextOptions<MrDb> options) : base(options) { }
 
         public DbSet<Forskolan> Forskolans { get; set; }
         public DbSet<KontaktInfo> kontaktInfos { get; set; }
         public DbSet<PdfData> PdfData { get; set; }
-        public DbSet<PdfAllData> PdfAllData { get; set; }
-
+        public DbSet<PdfDataAll> PdfDataAlls { get; set; }
         public DbSet<PostBlog> PostBlogs { get; set; }
-        public DbSet<SurveyResult> SurveyResults { get; set; }
-
+        public DbSet<Malibu> Malibus { get; set; }
+        public DbSet<Question> Questions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

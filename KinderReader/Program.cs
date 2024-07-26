@@ -1,12 +1,12 @@
-﻿using MasterKinder.Data;
+﻿using KinderReader;
+using MasterKinder.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
+using System.Net.Http;
 using System.Threading.Tasks;
-using KinderReader;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,12 +18,12 @@ builder.Services.AddDbContext<MrDb>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultSQLConnection")));
 
-// Add the scraper services
-builder.Services.AddScoped<GoScraper>();
-builder.Services.AddScoped<PdfScrapingService>();
+// Add the scraper service
+builder.Services.AddScoped<Scraper>();
 
-// Add HttpClient for making API requests
+// Add the PDF scraping service
 builder.Services.AddHttpClient();
+builder.Services.AddTransient<PdfScrapingService>();
 
 var app = builder.Build();
 
@@ -45,42 +45,22 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Run the main method
-await MainMethod(app.Services);
+// Run the PDF scraping service
+await RunPdfScraperAsync(app.Services);
 
 app.Run();
 
-async Task MainMethod(IServiceProvider services)
-{
-    // Räkna alla poster i Forskolans
-    int totalForskolans = await CountAllForskolansAsync(services);
-    Console.WriteLine($"Total number of Forskolans: {totalForskolans}");
-
-    // Exempel på att köra skrapning och andra operationer
-    await RunScraperAsync(services);
-}
-
-async Task<int> CountAllForskolansAsync(IServiceProvider services)
+async Task RunPdfScraperAsync(IServiceProvider services)
 {
     using var scope = services.CreateScope();
-    var context = scope.ServiceProvider.GetRequiredService<MrDb>();
-    return await context.Forskolans.CountAsync();
-}
-
-async Task RunScraperAsync(IServiceProvider services)
-{
-    using var scope = services.CreateScope();
-    var scraper = scope.ServiceProvider.GetRequiredService<GoScraper>();
-
-    // Skrapa PDF-filer från den angivna URLen
-    bool isSuccess = await scraper.Scrape(0);
-
-    if (isSuccess)
+    var pdfScrapingService = scope.ServiceProvider.GetRequiredService<PdfScrapingService>();
+    try
     {
-        Console.WriteLine("PDF scraping and saving completed successfully.");
+        // Pass your actual URL here
+        await pdfScrapingService.ScrapeAndSavePdfData("https://ssan.stockholm.se/anonym/webdokument/Delade%20dokument/Forms/AllItems.aspx?RootFolder=%2Fanonym%2Fwebdokument%2FDelade%20dokument%2FF%C3%B6rskolor%2F2024%2FS%C3%B6dermalm&FolderCTID=0x01200015B00A3B7947284E8A98F455403CF440&View=%7BCEB0BF65%2D2CB1%2D4A7B%2DA2B3%2DD82EE112AAA7%7D\r\n");
     }
-    else
+    catch (Exception ex)
     {
-        Console.WriteLine("PDF scraping failed.");
+        Console.WriteLine($"An error occurred while scraping PDFs: {ex.Message}");
     }
 }
