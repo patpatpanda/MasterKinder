@@ -11,6 +11,7 @@
     <None Include="wwwroot\static\css\main.199d90a9.css.map" />
     <None Include="wwwroot\static\css\main.21fc960c.css.map" />
     <None Include="wwwroot\static\css\main.26772185.css.map" />
+    <None Include="wwwroot\static\css\main.31b54532.css.map" />
     <None Include="wwwroot\static\css\main.414d7ab5.css.map" />
     <None Include="wwwroot\static\css\main.698fc3c9.css.map" />
     <None Include="wwwroot\static\css\main.8f0dd6af.css.map" />
@@ -34,6 +35,8 @@
     <None Include="wwwroot\static\js\main.06bc2e7f.js.map" />
     <None Include="wwwroot\static\js\main.1c614309.js" />
     <None Include="wwwroot\static\js\main.1c614309.js.map" />
+    <None Include="wwwroot\static\js\main.2390b3fe.js" />
+    <None Include="wwwroot\static\js\main.2390b3fe.js.map" />
     <None Include="wwwroot\static\js\main.298410ac.js" />
     <None Include="wwwroot\static\js\main.298410ac.js.map" />
     <None Include="wwwroot\static\js\main.2bab1367.js" />

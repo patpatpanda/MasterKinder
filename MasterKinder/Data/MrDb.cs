@@ -14,7 +14,7 @@ namespace MasterKinder.Data
         public DbSet<Forskolan> Forskolans { get; set; }
         public DbSet<KontaktInfo> kontaktInfos { get; set; }
         public DbSet<PdfData> PdfData { get; set; }
-        public DbSet<PdfDataAll> PdfDataAlls { get; set; }
+    
         public DbSet<PostBlog> PostBlogs { get; set; }
         public DbSet<Malibu> Malibus { get; set; }
         public DbSet<Question> Questions { get; set; }

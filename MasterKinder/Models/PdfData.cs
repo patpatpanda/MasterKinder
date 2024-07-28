@@ -11,8 +11,5 @@ public class PdfData
     public int AntalSvar { get; set; }
     public string? NormalizedNamn { get; set; }
 
-    // Nya egenskaper för frågorna
-    public string FrageText { get; set; }
-    public int InstammerHelt { get; set; }
-    public int Instammer { get; set; }
+   
 }

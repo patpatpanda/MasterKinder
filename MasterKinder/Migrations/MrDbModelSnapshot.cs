@@ -146,46 +146,6 @@ namespace MasterKinder.Migrations
                     b.ToTable("Forskolans");
                 });
 
-            modelBuilder.Entity("MasterKinder.Models.PdfDataAll", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AntalSvar")
-                        .HasColumnType("int");
-
-                    b.Property<string>("FrageText")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Helhetsomdome")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Instammer")
-                        .HasColumnType("int");
-
-                    b.Property<int>("InstammerHelt")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Namn")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NormalizedNamn")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Svarsfrekvens")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PdfDataAlls");
-                });
-
             modelBuilder.Entity("MasterKinder.Models.PostBlog", b =>
                 {
                     b.Property<int>("Id")
@@ -426,19 +386,9 @@ namespace MasterKinder.Migrations
                     b.Property<int>("AntalSvar")
                         .HasColumnType("int");
 
-                    b.Property<string>("FrageText")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Helhetsomdome")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Instammer")
-                        .HasColumnType("int");
-
-                    b.Property<int>("InstammerHelt")
-                        .HasColumnType("int");
 
                     b.Property<string>("Namn")
                         .IsRequired()
