@@ -69,6 +69,8 @@
     <None Include="wwwroot\static\js\main.cf4c4cf3.js.map" />
     <None Include="wwwroot\static\js\main.cf63578c.js" />
     <None Include="wwwroot\static\js\main.cf63578c.js.map" />
+    <None Include="wwwroot\static\js\main.d483edc8.js" />
+    <None Include="wwwroot\static\js\main.d483edc8.js.map" />
     <None Include="wwwroot\static\js\main.d6c1e8b1.js" />
     <None Include="wwwroot\static\js\main.d6c1e8b1.js.map" />
     <None Include="wwwroot\static\js\main.d71387dd.js" />
