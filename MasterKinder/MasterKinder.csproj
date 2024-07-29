@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="wwwroot\static\css\main.0d605be2.css.map" />
     <None Include="wwwroot\static\css\main.13e5095b.css.map" />
     <None Include="wwwroot\static\css\main.199d90a9.css.map" />
     <None Include="wwwroot\static\css\main.21fc960c.css.map" />
@@ -37,16 +38,22 @@
     <None Include="wwwroot\static\js\main.1c614309.js.map" />
     <None Include="wwwroot\static\js\main.2390b3fe.js" />
     <None Include="wwwroot\static\js\main.2390b3fe.js.map" />
+    <None Include="wwwroot\static\js\main.24f41d6c.js" />
+    <None Include="wwwroot\static\js\main.24f41d6c.js.map" />
     <None Include="wwwroot\static\js\main.298410ac.js" />
     <None Include="wwwroot\static\js\main.298410ac.js.map" />
     <None Include="wwwroot\static\js\main.2bab1367.js" />
     <None Include="wwwroot\static\js\main.2bab1367.js.map" />
+    <None Include="wwwroot\static\js\main.2c9f24f4.js" />
+    <None Include="wwwroot\static\js\main.2c9f24f4.js.map" />
     <None Include="wwwroot\static\js\main.49e8658b.js" />
     <None Include="wwwroot\static\js\main.49e8658b.js.map" />
     <None Include="wwwroot\static\js\main.4af7069a.js" />
     <None Include="wwwroot\static\js\main.4af7069a.js.map" />
     <None Include="wwwroot\static\js\main.4e4a13fd.js" />
     <None Include="wwwroot\static\js\main.4e4a13fd.js.map" />
+    <None Include="wwwroot\static\js\main.50cd71a7.js" />
+    <None Include="wwwroot\static\js\main.50cd71a7.js.map" />
     <None Include="wwwroot\static\js\main.622ed7d4.js" />
     <None Include="wwwroot\static\js\main.622ed7d4.js.map" />
     <None Include="wwwroot\static\js\main.7413e79f.js" />
