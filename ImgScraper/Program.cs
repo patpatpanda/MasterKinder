@@ -61,7 +61,7 @@ async Task MainMethod(IServiceProvider services)
     Console.WriteLine($"Total number of Forskolans: {totalForskolans}");
 
     // Exempel på att köra skrapning och andra operationer
-    await RunScraperAsync(services, 10970, 11000);
+    await RunScraperAsync(services, 11920, 11950);
 
 
 }
