@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.1e074a19.css",
-    "main.js": "/static/js/main.ffd2cfa9.js",
+    "main.js": "/static/js/main.d483edc8.js",
     "static/js/845.024e388e.chunk.js": "/static/js/845.024e388e.chunk.js",
     "static/media/stalin.png": "/static/media/stalin.27bd768a902aff4fe807.png",
     "static/media/yeye.webp": "/static/media/yeye.d16b4e0cf94f8bc86405.webp",
@@ -9,11 +9,11 @@
     "static/media/Förskolelogo.png": "/static/media/Förskolelogo.16100bb8bf4e919fd8c9.png",
     "index.html": "/index.html",
     "main.1e074a19.css.map": "/static/css/main.1e074a19.css.map",
-    "main.ffd2cfa9.js.map": "/static/js/main.ffd2cfa9.js.map",
+    "main.d483edc8.js.map": "/static/js/main.d483edc8.js.map",
     "845.024e388e.chunk.js.map": "/static/js/845.024e388e.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.1e074a19.css",
-    "static/js/main.ffd2cfa9.js"
+    "static/js/main.d483edc8.js"
   ]
 }

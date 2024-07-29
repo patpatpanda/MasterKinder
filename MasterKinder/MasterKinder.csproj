@@ -10,6 +10,7 @@
     <None Include="wwwroot\static\css\main.0d605be2.css.map" />
     <None Include="wwwroot\static\css\main.13e5095b.css.map" />
     <None Include="wwwroot\static\css\main.199d90a9.css.map" />
+    <None Include="wwwroot\static\css\main.1e074a19.css.map" />
     <None Include="wwwroot\static\css\main.21fc960c.css.map" />
     <None Include="wwwroot\static\css\main.26772185.css.map" />
     <None Include="wwwroot\static\css\main.31b54532.css.map" />
@@ -78,6 +79,8 @@
     <None Include="wwwroot\static\js\main.e2bf81a0.js.map" />
     <None Include="wwwroot\static\js\main.f730f77d.js" />
     <None Include="wwwroot\static\js\main.f730f77d.js.map" />
+    <None Include="wwwroot\static\js\main.ffd2cfa9.js" />
+    <None Include="wwwroot\static\js\main.ffd2cfa9.js.map" />
     <None Include="wwwroot\static\media\seri.f75e23367251b97803c6.webp" />
     <None Include="wwwroot\static\media\ste.f75e23367251b97803c6.webp" />
     <None Include="wwwroot\static\media\yeye.d16b4e0cf94f8bc86405.webp" />
