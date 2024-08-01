@@ -7,6 +7,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="wwwroot\static\css\main.5024556f.css.map" />
+    <None Include="wwwroot\static\css\main.5640331b.css.map" />
+    <None Include="wwwroot\static\js\845.024e388e.chunk.js" />
+    <None Include="wwwroot\static\js\845.024e388e.chunk.js.map" />
+    <None Include="wwwroot\static\js\845.2be9191b.chunk.js" />
+    <None Include="wwwroot\static\js\845.2be9191b.chunk.js.map" />
+    <None Include="wwwroot\static\js\main.94a02411.js" />
+    <None Include="wwwroot\static\js\main.94a02411.js.map" />
+    <None Include="wwwroot\static\js\main.c2f82821.js" />
+    <None Include="wwwroot\static\js\main.c2f82821.js.map" />
+    <None Include="wwwroot\static\media\seri.f75e23367251b97803c6.webp" />
+    <None Include="wwwroot\static\media\yeye.d16b4e0cf94f8bc86405.webp" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Azure.Storage.Blobs" Version="12.20.0" />
     <PackageReference Include="CsvHelper" Version="32.0.3" />
     <PackageReference Include="CsvTools" Version="1.0.12" />
