@@ -18,6 +18,8 @@ namespace MasterKinder.Data
         public DbSet<PostBlog> PostBlogs { get; set; }
         public DbSet<Malibu> Malibus { get; set; }
         public DbSet<Question> Questions { get; set; }
+        public DbSet<ForskolanStats> ForskolanAllStats { get; set; }
+        public DbSet<SurveyResponse> SurveyResponses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
