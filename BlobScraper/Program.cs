@@ -73,7 +73,7 @@ class Program
                     context.SurveyResponses.AddRange(records);
                     context.SaveChanges();
 
-                    logger.LogInformation($"Sparade {records.Count} poster till databasen för år 2019.");
+                    logger.LogInformation($"Sparade {records.Count} poster till databasen för år 20119.");
                 }
             }
             catch (Exception ex)
