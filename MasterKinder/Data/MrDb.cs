@@ -20,6 +20,10 @@ namespace MasterKinder.Data
         public DbSet<Question> Questions { get; set; }
         public DbSet<ForskolanStats> ForskolanAllStats { get; set; }
         public DbSet<SurveyResponse> SurveyResponses { get; set; }
+        public DbSet<SurveyResponses_2021> SurveyResponses2021 { get; set; }
+        public DbSet<SurveyResponses_2022> SurveyResponses2022 { get; set; }
+        public DbSet<SurveyResponses_2023> SurveyResponses2023 { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

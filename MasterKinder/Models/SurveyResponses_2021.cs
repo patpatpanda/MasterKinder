@@ -2,7 +2,7 @@
 
 namespace MasterKinder.Models
 {
-    public class SurveyResponse : ISurveyResponse
+    public class SurveyResponses_2021: ISurveyResponse
     {
         public int Id { get; set; }
 

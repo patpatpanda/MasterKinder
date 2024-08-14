@@ -66,11 +66,11 @@ class Program
                 using (var csv = new CsvReader(reader, csvConfig))
                 {
                     csv.Context.RegisterClassMap<SurveyResponseMap>(); // Registrera din anpassade mappning
-                    var records = csv.GetRecords<SurveyResponse>()
+                    var records = csv.GetRecords<SurveyResponses_2023>()
                                      .Where(r => r.AvserAr == "2023" && r.Forskoleverksamhet != "Fiktiv enhet" && r.Forskoleenhet != "Förskoleenhet saknas" && r.Forskoleverksamhet != "Fiktiv kommunal") // Filtrera för år 2019 och exkludera "fiktiv enhet"
                                      .ToList();
 
-                    context.SurveyResponses.AddRange(records);
+                    context.SurveyResponses2023.AddRange(records);
                     context.SaveChanges();
 
                     logger.LogInformation($"Sparade {records.Count} poster till databasen för år 20119.");
@@ -103,7 +103,7 @@ class Program
 
 
 
-    public class SurveyResponseMap : ClassMap<SurveyResponse>
+    public class SurveyResponseMap : ClassMap<SurveyResponses_2023>
     {
         public SurveyResponseMap()
         {
@@ -113,16 +113,27 @@ class Program
             Map(m => m.Forskoleenhet).Name("Förskoleenhet");
             Map(m => m.Forskoleverksamhet).Name("Förskoleverksamhet");
             Map(m => m.RegiformNamn).Name("RegiformNamn");
-            Map(m => m.FragaomradeNr).Name("FrågeområdeNr");
-            Map(m => m.Fragaomradestext).Name("Frågeområdestext");
-            Map(m => m.FragaNr).Name("FrågeNr");
+            Map(m => m.FrageomradeNr).Name("FrågeområdeNr");
+            Map(m => m.Frageomradestext).Name("Frågeområdestext");
+            Map(m => m.FrageNr).Name("FrågeNr");
             Map(m => m.Fragetext).Name("Frågetext");
             Map(m => m.Kortfragetext).Name("Kortfrågetext");
             Map(m => m.SvarsalternativTyp).Name("SvarsalternativTyp");
             Map(m => m.Fragetyp).Name("Frågetyp");
-            Map(m => m.Fragkategori).Name("Frågekategori");
+            Map(m => m.Fragekategori).Name("Frågekategori");
             Map(m => m.SvarsalternativNr).Name("SvarsalternativNr");
             Map(m => m.SvarsalternativText).Name("SvarsalternativText");
+            // Lägg till mappning för alla övriga fält
+            Map(m => m.ResultatkategoriKod).Name("ResultatkategoriKod");
+            Map(m => m.Organisatoriskenhetskod).Name("Organisatoriskenhetskod");
+            Map(m => m.AntalSvarsalternativ).Name("AntalSvarsalternativ");
+            Map(m => m.GraderingSvarsalternativ).Name("GraderingSvarsalternativ");
+            Map(m => m.Enkatroll).Name("Enkätroll");
+            Map(m => m.Respondentroll).Name("Respondentroll");
+            Map(m => m.Kon).Name("Kön");
+            Map(m => m.Utfall).Name("Utfall");
+            Map(m => m.TotalVarde).Name("TotalVarde");
+            Map(m => m.TotalVarde_ExklVetEj).Name("TotalVarde_ExklVetEj");
         }
     }
 
