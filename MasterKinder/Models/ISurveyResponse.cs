@@ -7,6 +7,8 @@
         string Fragetext { get; set; }
         string GraderingSvarsalternativ { get; set; }
         string Utfall { get; set; }
+        string SvarsalternativText { get; set; }
+       string FrageNr { get; set; }
     }
    
 }
