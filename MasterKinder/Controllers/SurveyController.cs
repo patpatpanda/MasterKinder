@@ -250,6 +250,76 @@ namespace MasterKinderAPI.Controllers
             return Ok(fragetexter);
         }
 
+        [HttpGet("survey/name/{name}")]
+        public async Task<ActionResult<IEnumerable<SurveyResponse>>> GetSurveyResponseByName(string name)
+        {
+            string normalizedSearchName = NormalizeName(name);
+            string[] searchWords = name.Split(' ');
+
+            var surveyResponses = await _context.SurveyResponses
+                .Where(s => EF.Functions.Like(NormalizeName(s.Forskoleverksamhet), $"%{normalizedSearchName}%"))
+                .ToListAsync();
+
+            if (!surveyResponses.Any())
+            {
+                var query = _context.SurveyResponses.AsQueryable();
+                foreach (var word in searchWords)
+                {
+                    string normalizedWord = NormalizeName(word);
+                    query = query.Where(s => EF.Functions.Like(NormalizeName(s.Forskoleverksamhet), $"%{normalizedWord}%"));
+                }
+                surveyResponses = await query.ToListAsync();
+            }
+
+            if (!surveyResponses.Any())
+            {
+                return NotFound();
+            }
+
+            return Ok(surveyResponses);
+        }
+
+        private string NormalizeName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return name;
+
+            string[] prefixes = { "Förskolan", "Föräldrakooperativet", "Föräldrakooperativ", "Daghemmet", "Daghem", "Barnstugan", "Montessoriförskolan", "Montessori", "Engelsk-svenska" };
+            foreach (var prefix in prefixes)
+            {
+                if (name.StartsWith(prefix, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    name = name.Substring(prefix.Length).Trim();
+                }
+            }
+
+            return name.ToLower().Trim().Replace(" ", "");
+        }
+        [HttpGet("satisfaction-summary")]
+        public async Task<ActionResult<IEnumerable<SatisfactionSummary>>> GetSatisfactionSummary()
+        {
+            var satisfactionData = await _context.SurveyResponses
+                .Where(s => s.Fragetext == "Jag är som helhet nöjd med mitt barns förskola")
+                .GroupBy(s => new { s.Forskoleverksamhet, s.AvserAr })
+                .Select(g => new SatisfactionSummary
+                {
+                    Forskoleverksamhet = g.Key.Forskoleverksamhet,
+                    Year = g.Key.AvserAr,
+                    TotalResponses = g.Count(),
+                    PositiveResponses = g.Count(s => s.SvarsalternativText == "Instämmer helt" || s.SvarsalternativText == "Instämmer i stor utsträckning")
+                })
+                .ToListAsync();
+
+            return Ok(satisfactionData);
+        }
+
+        public class SatisfactionSummary
+        {
+            public string Forskoleverksamhet { get; set; }
+            public string Year { get; set; }
+            public int TotalResponses { get; set; }
+            public int PositiveResponses { get; set; }
+        }
+
 
     }
 }

@@ -1,19 +1,19 @@
 {
   "files": {
-    "main.css": "/static/css/main.5640331b.css",
-    "main.js": "/static/js/main.c2f82821.js",
-    "static/js/845.2be9191b.chunk.js": "/static/js/845.2be9191b.chunk.js",
+    "main.css": "/static/css/main.264be551.css",
+    "main.js": "/static/js/main.b1eccd5a.js",
+    "static/js/462.a5fce5f8.chunk.js": "/static/js/462.a5fce5f8.chunk.js",
     "static/media/stalin.png": "/static/media/stalin.27bd768a902aff4fe807.png",
     "static/media/yeye.webp": "/static/media/yeye.d16b4e0cf94f8bc86405.webp",
     "static/media/seri.webp": "/static/media/seri.f75e23367251b97803c6.webp",
     "static/media/förskolekollen.png": "/static/media/förskolekollen.16100bb8bf4e919fd8c9.png",
     "index.html": "/index.html",
-    "main.5640331b.css.map": "/static/css/main.5640331b.css.map",
-    "main.c2f82821.js.map": "/static/js/main.c2f82821.js.map",
-    "845.2be9191b.chunk.js.map": "/static/js/845.2be9191b.chunk.js.map"
+    "main.264be551.css.map": "/static/css/main.264be551.css.map",
+    "main.b1eccd5a.js.map": "/static/js/main.b1eccd5a.js.map",
+    "462.a5fce5f8.chunk.js.map": "/static/js/462.a5fce5f8.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.5640331b.css",
-    "static/js/main.c2f82821.js"
+    "static/css/main.264be551.css",
+    "static/js/main.b1eccd5a.js"
   ]
 }

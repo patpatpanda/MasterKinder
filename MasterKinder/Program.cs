@@ -63,7 +63,7 @@ app.Use(async (context, next) =>
 });
 
 app.UseHttpsRedirection();
-
+app.UseStaticFiles(); // Serve static files from wwwroot
 app.UseRouting();
 app.UseCors("AllowAll"); // Make sure CORS is used
 app.UseAuthentication(); // Lägg till detta för att aktivera autentisering
@@ -73,5 +73,8 @@ app.MapControllers(); // Enable API routes
 
 // Map Razor Pages
 app.MapRazorPages();
+
+// Serve the React app's index.html as a fallback for all other routes
+app.MapFallbackToFile("{*path:nonfile}", "index.html");
 
 app.Run();
