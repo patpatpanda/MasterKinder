@@ -5,7 +5,7 @@
 namespace MasterKinder.Migrations
 {
     /// <inheritdoc />
-    public partial class kikki : Migration
+    public partial class Kikki : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

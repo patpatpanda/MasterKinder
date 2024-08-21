@@ -5,7 +5,7 @@
 namespace MasterKinder.Migrations
 {
     /// <inheritdoc />
-    public partial class tre : Migration
+    public partial class Tre : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

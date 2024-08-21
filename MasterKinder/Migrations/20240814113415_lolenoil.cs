@@ -5,7 +5,7 @@
 namespace MasterKinder.Migrations
 {
     /// <inheritdoc />
-    public partial class lolenoil : Migration
+    public partial class Lolenoil : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
