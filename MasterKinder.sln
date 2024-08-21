@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImgScraper", "ImgScraper\Im
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlobScraper", "BlobScraper\BlobScraper.csproj", "{BD0AE8D6-74C7-450D-A277-37737B1DB0A7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KinderTest", "KinderTest\KinderTest.csproj", "{2B2456A1-4D50-4683-A7DB-DE15946893DE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{BD0AE8D6-74C7-450D-A277-37737B1DB0A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BD0AE8D6-74C7-450D-A277-37737B1DB0A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BD0AE8D6-74C7-450D-A277-37737B1DB0A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B2456A1-4D50-4683-A7DB-DE15946893DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B2456A1-4D50-4683-A7DB-DE15946893DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B2456A1-4D50-4683-A7DB-DE15946893DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B2456A1-4D50-4683-A7DB-DE15946893DE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
