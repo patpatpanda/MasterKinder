@@ -2,10 +2,11 @@ name: .NET Core
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - '**' # Trigger för alla brancher
   pull_request:
-    branches: [ main ]
-
+    branches:
+      - '**'
 jobs:
   build:
     runs-on: ubuntu-latest
