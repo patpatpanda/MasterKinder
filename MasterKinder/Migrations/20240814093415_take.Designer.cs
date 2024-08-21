@@ -13,7 +13,7 @@ namespace MasterKinder.Migrations
 {
     [DbContext(typeof(MrDb))]
     [Migration("20240814093415_take")]
-    partial class take
+    partial class Take
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
