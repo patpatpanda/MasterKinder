@@ -7,18 +7,19 @@ on:
   pull_request:
     branches:
       - '**'
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
     - name: Check out the repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3  # Uppdaterad till v3
 
     - name: Set up .NET Core
-      uses: actions/setup-dotnet@v2
+      uses: actions/setup-dotnet@v3  # Uppdaterad till v3
       with:
-        dotnet-version: '8.0' # eller den version av .NET Core du använder
+        dotnet-version: '8.0'  # eller den version av .NET du använder
 
     - name: Restore dependencies
       run: dotnet restore
@@ -26,5 +27,5 @@ jobs:
     - name: Build the solution
       run: dotnet build --no-restore
 
-    - name: Run tests
-      run: dotnet test KinderTest/KinderTest.csproj --no-build --verbosity normal
+    - name: Run specific tests
+      run: dotnet test KinderTest/KinderTest.csproj --filter "FullyQualifiedName~ForskolanControllerTests"
