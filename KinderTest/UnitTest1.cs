@@ -12,8 +12,8 @@ public class ForskolanControllerTests
     {
         // Arrange
         var mockDbContext = new Mock<MrDb>();  // Mocka MrDb
-        var mockGeocodeService = new Mock<GeocodeService>();  // Mocka GeocodeService
-        var mockLogger = new Mock<ILogger<ForskolanController>>();  // Mocka ILogger
+        var mockGeocodeService = new Mock<GeocodeService>();  
+        var mockLogger = new Mock<ILogger<ForskolanController>>(); 
 
         var controller = new ForskolanController(
             mockDbContext.Object,
