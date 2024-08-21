@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include=".github\workflows\dotnet-core.yml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="wwwroot\static\css\main.5024556f.css.map" />
     <None Include="wwwroot\static\css\main.5640331b.css.map" />
     <None Include="wwwroot\static\js\845.024e388e.chunk.js" />
@@ -53,7 +57,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="wwwroot\my-app\src\assets\index.html">
+    <Content Update="wwwroot\my-app\src\assets\index.html"> 
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
