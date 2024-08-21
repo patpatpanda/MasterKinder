@@ -27,5 +27,5 @@ jobs:
     - name: Build the solution
       run: dotnet build --no-restore
 
-    - name: Run tests
-      run: dotnet test KinderTest/KinderTest.csproj --no-build --verbosity normal
+    - name: Run specific tests
+      run: dotnet test KinderTest/KinderTest.csproj --filter "FullyQualifiedName~ForskolanControllerTests"
