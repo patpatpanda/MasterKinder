@@ -51,7 +51,7 @@ namespace MasterKinderAPI.Controllers
                 .Where(s => s.Forskoleverksamhet == forskoleverksamhet && s.Fragetext == fragetext)
                 .ToListAsync();
 
-            return Ok(responses);
+            return Ok(responses ?? new List<ISurveyResponse>());
         }
 
         [HttpGet("nojd")]
@@ -87,7 +87,6 @@ namespace MasterKinderAPI.Controllers
                     return BadRequest("Ogiltigt år.");
             }
 
-            // Hämta alla svar för den specifika frågan vid den angivna förskoleverksamheten
             query = query.Where(s => s.Forskoleverksamhet == forskoleverksamhet);
 
             if (!string.IsNullOrEmpty(fragetext))
@@ -100,9 +99,8 @@ namespace MasterKinderAPI.Controllers
                 query = query.Where(s => s.FrageNr == frageNr);
             }
 
-            var responses = await query.ToListAsync();
+            var responses = await query.ToListAsync() ?? new List<ISurveyResponse>();
 
-            // Räkna antalet nöjda svar
             var antalNöjdaSvar = responses
                 .Where(s => s.SvarsalternativText == "3" ||
                             s.SvarsalternativText == "4" ||
@@ -110,13 +108,11 @@ namespace MasterKinderAPI.Controllers
                             s.SvarsalternativText == "Instämmer" ||
                             s.SvarsalternativText == "Instämmer i stor utsträckning" ||
                             s.SvarsalternativText == "Instämmer helt")
-                .Sum(s => string.IsNullOrEmpty(s.Utfall) ? 0 : int.TryParse(s.Utfall, out var value) ? value : 0);
+                .Sum(s => int.TryParse(s.Utfall, out var value) ? value : 0);
 
-            // Räkna det totala antalet svar för frågan
             var totaltAntalSvar = responses
-                .Sum(s => string.IsNullOrEmpty(s.Utfall) ? 0 : int.TryParse(s.Utfall, out var value) ? value : 0);
+                .Sum(s => int.TryParse(s.Utfall, out var value) ? value : 0);
 
-            // Returnera både antalet nöjda svar och det totala antalet svar
             return Ok(new
             {
                 AntalNöjdaSvar = antalNöjdaSvar,
@@ -157,7 +153,6 @@ namespace MasterKinderAPI.Controllers
                     return BadRequest("Ogiltigt år.");
             }
 
-            // Hämta alla svar för den specifika frågan vid den angivna förskoleverksamheten
             query = query.Where(s => s.Forskoleverksamhet == forskoleverksamhet);
 
             if (!string.IsNullOrEmpty(fragetext))
@@ -170,10 +165,8 @@ namespace MasterKinderAPI.Controllers
                 query = query.Where(s => s.FrageNr == frageNr);
             }
 
-            // Hämta datan som rådata
-            var responses = await query.ToListAsync();
+            var responses = await query.ToListAsync() ?? new List<ISurveyResponse>();
 
-            // Gruppera och summera resultaten i minnet
             var aggregatedData = responses
                 .GroupBy(s => s.SvarsalternativText)
                 .Select(g => new
@@ -186,7 +179,6 @@ namespace MasterKinderAPI.Controllers
             return Ok(aggregatedData);
         }
 
-        // GET: api/Survey/forskoleverksamheter
         [HttpGet("forskoleverksamheter")]
         public async Task<IActionResult> GetForskoleverksamheter(int year)
         {
@@ -215,10 +207,9 @@ namespace MasterKinderAPI.Controllers
                 .Distinct()
                 .ToListAsync();
 
-            return Ok(forskoleverksamheter);
+            return Ok(forskoleverksamheter ?? new List<string>());
         }
 
-        // GET: api/Survey/fragetexter
         [HttpGet("fragetexter")]
         public async Task<IActionResult> GetFragetexter(int year)
         {
@@ -247,7 +238,7 @@ namespace MasterKinderAPI.Controllers
                 .Distinct()
                 .ToListAsync();
 
-            return Ok(fragetexter);
+            return Ok(fragetexter ?? new List<string>());
         }
 
         [HttpGet("survey/name/{name}")]
@@ -281,7 +272,7 @@ namespace MasterKinderAPI.Controllers
 
         private string NormalizeName(string name)
         {
-            if (string.IsNullOrWhiteSpace(name)) return name;
+            if (string.IsNullOrWhiteSpace(name)) return string.Empty;
 
             string[] prefixes = { "Förskolan", "Föräldrakooperativet", "Föräldrakooperativ", "Daghemmet", "Daghem", "Barnstugan", "Montessoriförskolan", "Montessori", "Engelsk-svenska" };
             foreach (var prefix in prefixes)
@@ -294,6 +285,7 @@ namespace MasterKinderAPI.Controllers
 
             return name.ToLower().Trim().Replace(" ", "");
         }
+
         [HttpGet("satisfaction-summary")]
         public async Task<ActionResult<IEnumerable<SatisfactionSummary>>> GetSatisfactionSummary()
         {
@@ -309,17 +301,15 @@ namespace MasterKinderAPI.Controllers
                 })
                 .ToListAsync();
 
-            return Ok(satisfactionData);
+            return Ok(satisfactionData ?? new List<SatisfactionSummary>());
         }
 
         public class SatisfactionSummary
         {
-            public string Forskoleverksamhet { get; set; }
-            public string Year { get; set; }
+            public string Forskoleverksamhet { get; set; } = string.Empty;
+            public string Year { get; set; } = string.Empty;
             public int TotalResponses { get; set; }
             public int PositiveResponses { get; set; }
         }
-
-
     }
 }
