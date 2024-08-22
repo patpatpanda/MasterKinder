@@ -11,7 +11,7 @@ namespace MasterKinder.Data
     {
         public MrDb(DbContextOptions<MrDb> options) : base(options) { }
 
-        public DbSet<Forskolan> Forskolans { get; set; }
+        public  DbSet<Forskolan> Forskolans { get; set; }
         public DbSet<KontaktInfo> kontaktInfos { get; set; }
         public DbSet<PdfData> PdfData { get; set; }
     

@@ -125,7 +125,7 @@ namespace MasterKinderAPI.Controllers
         }
 
         [HttpGet("svarsalternativ")]
-        public async Task<IActionResult> GetSvarsalternativResponses(int year, string forskoleverksamhet, string fragetext = null, string frageNr = null)
+        public async Task<IActionResult> GetSvarsalternativResponses(int year, string forskoleverksamhet, string fragetext , string frageNr)
         {
             if (string.IsNullOrEmpty(forskoleverksamhet))
             {
