@@ -1,9 +1,9 @@
-name: .NET Core
+name: .NET Core Workflow
 
 on:
   push:
     branches:
-      - '**' # Trigger för alla brancher
+      - '**'  # Trigger för alla brancher
   pull_request:
     branches:
       - '**'
@@ -13,19 +13,48 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # Steg 1: Klona källkoden från GitHub-repositoryt
     - name: Check out the repository
-      uses: actions/checkout@v3  # Uppdaterad till v3
+      uses: actions/checkout@v3
 
+    # Steg 2: Installera .NET Core SDK
     - name: Set up .NET Core
-      uses: actions/setup-dotnet@v3  # Uppdaterad till v3
+      uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: '8.0'  # eller den version av .NET du använder
+        dotnet-version: '8.0'  # Byt till rätt .NET-version om det behövs
 
+    # Steg 3: Konvertera alla CSV-filer till UTF-8 (om nödvändigt)
+    - name: Convert files to UTF-8
+      run: |
+        find . -name "*.csv" -exec iconv -f Windows-1252 -t UTF-8 {} -o {} \;
+        echo "All CSV files have been converted to UTF-8"
+
+    # Steg 4: Återställ beroenden
     - name: Restore dependencies
       run: dotnet restore
 
+    # Steg 5: Bygg lösningen
     - name: Build the solution
-      run: dotnet build --no-restore
+      run: dotnet build --no-restore --configuration Release
 
+    # Steg 6: Validera filteckenkodning (tilläggssteg)
+    - name: Validate file encoding
+      run: |
+        for file in $(find . -name "*.csv"); do
+          if file -i "$file" | grep -q 'charset=iso-8859'; then
+            echo "Warning: $file has incorrect encoding. Converting to UTF-8."
+            iconv -f ISO-8859-1 -t UTF-8 "$file" -o "$file"
+          fi
+        done
+
+    # Steg 7: Kör specifika tester
     - name: Run specific tests
       run: dotnet test KinderTest/KinderTest.csproj --filter "FullyQualifiedName~ForskolanControllerTests"
+
+    # Steg 8: Publicera testresultat (valfritt, kan användas om du vill ha testloggar)
+    - name: Publish test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: Test-Results
+        path: TestResults
