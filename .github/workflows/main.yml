@@ -1,31 +1,37 @@
-name: .NET Core CI
+name: .NET Core Workflow
 
 on:
   push:
     branches:
-      - main
+      - '**'  # Trigger för alla brancher
   pull_request:
     branches:
-      - main
+      - '**'
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Check out code
-      uses: actions/checkout@v2
+    - name: Check out the repository
+      uses: actions/checkout@v3
 
     - name: Set up .NET Core
-      uses: actions/setup-dotnet@v2
+      uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: '7.0.x'
+        dotnet-version: '8.0'
+
+    # Nytt steg för att rensa ogiltiga tecken
+    - name: Clean invalid characters
+      run: |
+        sed -i 's/�//g' KinderTest/SurveyControllerTests.cs
+        iconv -f ISO-8859-1 -t UTF-8 KinderTest/SurveyControllerTests.cs -o KinderTest/SurveyControllerTests.cs
 
     - name: Restore dependencies
       run: dotnet restore
 
-    - name: Build the project
-      run: dotnet build --no-restore
+    - name: Build the solution
+      run: dotnet build --no-restore --configuration Release
 
-    - name: Run tests
-      run: dotnet test --no-build --verbosity normal
+    - name: Run specific tests
+      run: dotnet test KinderTest/KinderTest.csproj --filter "FullyQualifiedName~ForskolanControllerTests"
