@@ -15,10 +15,10 @@ namespace MasterKinder.Controllers
     public class ForskolanController : ControllerBase
     {
         private readonly MrDb _context;
-        private readonly IGeocodeService _geocodeService;
+        private readonly GeocodeService _geocodeService;
         private readonly ILogger<ForskolanController> _logger;
 
-        public ForskolanController(MrDb context, IGeocodeService geocodeService, ILogger<ForskolanController> logger)
+        public ForskolanController(MrDb context, GeocodeService geocodeService, ILogger<ForskolanController> logger)
         {
             _context = context;
             _geocodeService = geocodeService;
