@@ -6,7 +6,7 @@
     public int? Svarsfrekvens { get; set; }
     public int? AntalSvar { get; set; }
     public string? NormalizedNamn { get; set; }
-    public List<Question> Questions { get; set; }
+    public List<Question>? Questions { get; set; }
 }
 
 public class Question
@@ -16,5 +16,5 @@ public class Question
     public int? AndelInstammer { get; set; }
     public int? Year { get; set; }
     public int MalibuId { get; set; }
-    public Malibu Malibu { get; set; }
+    public Malibu? Malibu { get; set; }
 }
