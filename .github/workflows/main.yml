@@ -1,4 +1,4 @@
-name: .NET Core Workflow
+name: .NET Core CI/CD Workflow
 
 on:
   push:
@@ -33,5 +33,18 @@ jobs:
     - name: Build the solution
       run: dotnet build --no-restore --configuration Release
 
+    - name: Run all tests
+      run: dotnet test --no-build --configuration Release --logger "trx;LogFileName=test_results.trx"
+
+    - name: Publish Test Results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: '**/*.trx'
+
+    # För att köra specifika tester separat (valfritt steg)
     - name: Run specific tests
-      run: dotnet test KinderTest/KinderTest.csproj --filter "FullyQualifiedName~ForskolanControllerTests"
+      run: dotnet test KinderTest/KinderTest.csproj --filter "FullyQualifiedName~ForskolanControllerTests" --no-build --configuration Release
+
+    # Lägg till distributionssteg (om nödvändigt) beroende på din CI/CD-pipeline
