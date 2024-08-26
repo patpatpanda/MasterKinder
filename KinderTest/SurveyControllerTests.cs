@@ -3,7 +3,9 @@ using MasterKinderAPI.Controllers;
 using MasterKinder.Data;
 using MasterKinder.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using static MasterKinderAPI.Controllers.SurveyController;
 
 
 public class SurveyControllerTests
@@ -259,6 +261,306 @@ public class SurveyControllerTests
 
         // Kontrollera att listan är tom
         Assert.Empty(returnValue);
+    }
+    [Fact]
+    public async Task GetSurveyResponses_ReturnsBadRequest_WhenYearIsInvalid()
+    {
+        // Arrange
+        var context = GetInMemoryDbContext("TestDbInvalidYear");
+        var controller = new SurveyController(context);
+
+        // Act
+        var result = await controller.GetSurveyResponses(2019, "XYZ", "ABC"); // Invalid year
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Equal("Ogiltigt år.", badRequestResult.Value);
+    }
+    [Fact]
+    public async Task GetNöjdResponses_ReturnsBadRequest_WhenBothFragetextAndFrageNrAreNull()
+    {
+        // Arrange
+        var context = GetInMemoryDbContext("TestDbBothNull");
+        var controller = new SurveyController(context);
+
+        // Act
+        var result = await controller.GetNöjdResponses(2020, "XYZ", null, null);
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Equal("Antingen Frågetext eller FrageNr måste anges.", badRequestResult.Value);
+    }
+    [Fact]
+    public async Task GetNöjdResponses_ReturnsOk_WhenOnlyFragetextIsProvided()
+    {
+        // Arrange
+        var context = GetInMemoryDbContext("TestDbOnlyFragetext");
+        context.SurveyResponses.Add(new SurveyResponse { Forskoleverksamhet = "XYZ", Fragetext = "ABC", SvarsalternativText = "3", Utfall = "10" });
+        await context.SaveChangesAsync();
+
+        var controller = new SurveyController(context);
+
+        // Act
+        var result = await controller.GetNöjdResponses(2020, "XYZ", "ABC");
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+
+        // Använd System.Text.Json för att deserialisera resultatet
+        var jsonString = JsonSerializer.Serialize(okResult.Value);
+        var returnValue = JsonSerializer.Deserialize<Dictionary<string, int>>(jsonString);
+
+        Assert.NotNull(returnValue);
+        Assert.Equal(10, returnValue["AntalNöjdaSvar"]);  // Förväntar sig en nöjd svar
+        Assert.Equal(10, returnValue["TotaltAntalSvar"]); // Förväntar sig ett totalt svar
+    }
+    [Fact]
+    public async Task GetSvarsalternativResponses_ReturnsBadRequest_WhenForskoleverksamhetIsMissing()
+    {
+        // Arrange
+        var context = GetInMemoryDbContext("TestDbMissingForskoleverksamhet");
+        var controller = new SurveyController(context);
+
+        // Act
+        var result = await controller.GetSvarsalternativResponses(2020, null, "ABC", "25");
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Equal("Förskoleverksamhet måste anges.", badRequestResult.Value);
+    }
+    [Fact]
+    public async Task GetSvarsalternativResponses_ReturnsBadRequest_WhenYearIsInvalid()
+    {
+        // Arrange
+        var context = GetInMemoryDbContext("TestDbInvalidYear");
+        var controller = new SurveyController(context);
+
+        // Act
+        var result = await controller.GetSvarsalternativResponses(2019, "XYZ", "ABC", "25");
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Equal("Ogiltigt år.", badRequestResult.Value);
+    }
+    [Fact]
+    public async Task GetSvarsalternativResponses_ReturnsOk_WithEmptyList_WhenNoDataMatches()
+    {
+        // Arrange
+        var context = GetInMemoryDbContext("TestDbNoMatchingData");
+        var controller = new SurveyController(context);
+
+        // Act
+        var result = await controller.GetSvarsalternativResponses(2020, "NonExistent", "NoMatch", "99");
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+
+        // Kontrollera om resultatet är null och hantera det på rätt sätt
+        Assert.NotNull(okResult.Value);
+        var returnValue = okResult.Value as List<object>;
+
+        Assert.NotNull(returnValue);
+        Assert.Empty(returnValue); // Kontrollera att listan är tom
+    }
+
+    [Fact]
+    public async Task GetFragetexter_ReturnsOk_WithValidYear()
+    {
+        // Arrange
+        var context = GetInMemoryDbContext("TestDbFragetexterValidYear");
+        context.SurveyResponses.Add(new SurveyResponse { Forskoleverksamhet = "XYZ", Fragetext = "ABC" });
+        context.SurveyResponses.Add(new SurveyResponse { Forskoleverksamhet = "XYZ", Fragetext = "DEF" });
+        context.SurveyResponses.Add(new SurveyResponse { Forskoleverksamhet = "XYZ", Fragetext = "ABC" }); // Duplicera, ska ignoreras av Distinct()
+        await context.SaveChangesAsync();
+
+        var controller = new SurveyController(context);
+
+        // Act
+        var result = await controller.GetFragetexter(2020);
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var returnValue = Assert.IsType<List<string>>(okResult.Value);
+
+        Assert.NotNull(returnValue);
+        Assert.Equal(2, returnValue.Count); // Förväntar sig 2 distinkta fragetexter
+        Assert.Contains("ABC", returnValue);
+        Assert.Contains("DEF", returnValue);
+    }
+    [Fact]
+    public async Task GetFragetexter_ReturnsBadRequest_WithInvalidYear()
+    {
+        // Arrange
+        var context = GetInMemoryDbContext("TestDbFragetexterInvalidYear");
+        var controller = new SurveyController(context);
+
+        // Act
+        var result = await controller.GetFragetexter(2019); // Ogiltigt år
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Equal("Ogiltigt år.", badRequestResult.Value);
+    }
+    [Fact]
+    public async Task GetFragetexter_ReturnsOk_WithEmptyList_WhenNoDataExists()
+    {
+        // Arrange
+        var context = GetInMemoryDbContext("TestDbFragetexterNoData");
+        var controller = new SurveyController(context);
+
+        // Act
+        var result = await controller.GetFragetexter(2020); // Inget data för detta år
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var returnValue = Assert.IsType<List<string>>(okResult.Value);
+
+        Assert.NotNull(returnValue);
+        Assert.Empty(returnValue); // Kontrollera att listan är tom
+    }
+    [Fact]
+    public async Task GetSurveyResponseByName_ReturnsOk_WithValidName()
+    {
+        // Arrange
+        var context = GetInMemoryDbContext("TestDbByNameValid");
+        context.SurveyResponses.Add(new SurveyResponse { Forskoleverksamhet = "Förskolan ABC" });
+        await context.SaveChangesAsync();
+
+        var controller = new SurveyController(context);
+
+        // Act
+        var result = await controller.GetSurveyResponseByName("Förskolan ABC");
+
+        // Assert
+        var actionResult = Assert.IsType<ActionResult<IEnumerable<SurveyResponse>>>(result);
+        var okResult = Assert.IsType<OkObjectResult>(actionResult.Result);
+
+        var returnValue = Assert.IsType<List<SurveyResponse>>(okResult.Value);
+
+        Assert.NotNull(returnValue);
+        Assert.Single(returnValue);
+        Assert.Equal("Förskolan ABC", returnValue[0].Forskoleverksamhet);
+    }
+
+    [Fact]
+    public async Task GetSurveyResponseByName_ReturnsOk_WithNameContainingMultipleWords()
+    {
+        // Arrange
+        var context = GetInMemoryDbContext("TestDbByNameMultipleWords");
+        context.SurveyResponses.Add(new SurveyResponse { Forskoleverksamhet = "Föräldrakooperativet Lilla Äventyret" });
+        await context.SaveChangesAsync();
+
+        var controller = new SurveyController(context);
+
+        // Act
+        var result = await controller.GetSurveyResponseByName("Lilla Äventyret");
+
+        // Assert
+        var actionResult = Assert.IsType<ActionResult<IEnumerable<SurveyResponse>>>(result);
+        var okResult = Assert.IsType<OkObjectResult>(actionResult.Result);
+
+        var returnValue = Assert.IsType<List<SurveyResponse>>(okResult.Value);
+        Assert.NotNull(returnValue);
+        Assert.Single(returnValue);
+        Assert.Equal("Föräldrakooperativet Lilla Äventyret", returnValue[0].Forskoleverksamhet);
+    }
+
+
+    [Fact]
+    public async Task GetSurveyResponseByName_ReturnsOk_WithPartialMatches()
+    {
+        // Arrange
+        var context = GetInMemoryDbContext("TestDbByNamePartialMatch");
+        context.SurveyResponses.Add(new SurveyResponse { Forskoleverksamhet = "Förskolan Lärkan" });
+        context.SurveyResponses.Add(new SurveyResponse { Forskoleverksamhet = "Föräldrakooperativet Lärkan" });
+        await context.SaveChangesAsync();
+
+        var controller = new SurveyController(context);
+
+        // Act
+        var result = await controller.GetSurveyResponseByName("Lärkan");
+
+        // Assert
+        var actionResult = Assert.IsType<ActionResult<IEnumerable<SurveyResponse>>>(result);
+        var okResult = Assert.IsType<OkObjectResult>(actionResult.Result);
+
+        var returnValue = Assert.IsType<List<SurveyResponse>>(okResult.Value);
+
+        Assert.NotNull(returnValue);
+        Assert.Equal(2, returnValue.Count);  // Förväntar sig 2 matchningar
+        Assert.Contains(returnValue, r => r.Forskoleverksamhet == "Förskolan Lärkan");
+        Assert.Contains(returnValue, r => r.Forskoleverksamhet == "Föräldrakooperativet Lärkan");
+    }
+    [Fact]
+    public async Task GetSatisfactionSummary_ReturnsOk_WithValidData()
+    {
+        // Arrange
+        var context = GetInMemoryDbContext("TestDbSatisfactionSummaryValidData");
+        context.SurveyResponses.Add(new SurveyResponse
+        {
+            Forskoleverksamhet = "Förskola ABC",
+            AvserAr = "2023",
+            Fragetext = "Jag är som helhet nöjd med mitt barns förskola",
+            SvarsalternativText = "Instämmer helt"
+        });
+        context.SurveyResponses.Add(new SurveyResponse
+        {
+            Forskoleverksamhet = "Förskola ABC",
+            AvserAr = "2023",
+            Fragetext = "Jag är som helhet nöjd med mitt barns förskola",
+            SvarsalternativText = "Instämmer i stor utsträckning"
+        });
+        context.SurveyResponses.Add(new SurveyResponse
+        {
+            Forskoleverksamhet = "Förskola XYZ",
+            AvserAr = "2023",
+            Fragetext = "Jag är som helhet nöjd med mitt barns förskola",
+            SvarsalternativText = "Instämmer helt"
+        });
+        await context.SaveChangesAsync();
+
+        var controller = new SurveyController(context);
+
+        // Act
+        var result = await controller.GetSatisfactionSummary();
+
+        // Assert
+        var actionResult = Assert.IsType<ActionResult<IEnumerable<SatisfactionSummary>>>(result);
+        var okResult = Assert.IsType<OkObjectResult>(actionResult.Result);
+
+        var returnValue = Assert.IsType<List<SatisfactionSummary>>(okResult.Value);
+
+        Assert.NotNull(returnValue);
+        Assert.Equal(2, returnValue.Count);  // Förväntar sig 2 distinkta sammanfattningar
+
+        var satisfactionABC = returnValue.FirstOrDefault(x => x.Forskoleverksamhet == "Förskola ABC" && x.Year == "2023");
+        Assert.NotNull(satisfactionABC);
+        Assert.Equal(2, satisfactionABC.PositiveResponses);  // Förväntar sig 2 positiva svar för "Förskola ABC"
+        Assert.Equal(2, satisfactionABC.TotalResponses);  // Förväntar sig totalt 2 svar för "Förskola ABC"
+
+        var satisfactionXYZ = returnValue.FirstOrDefault(x => x.Forskoleverksamhet == "Förskola XYZ" && x.Year == "2023");
+        Assert.NotNull(satisfactionXYZ);
+        Assert.Equal(1, satisfactionXYZ.PositiveResponses);  // Förväntar sig 1 positivt svar för "Förskola XYZ"
+        Assert.Equal(1, satisfactionXYZ.TotalResponses);  // Förväntar sig totalt 1 svar för "Förskola XYZ"
+    }
+    [Fact]
+    public async Task GetSatisfactionSummary_ReturnsOk_WithEmptyList_WhenNoDataExists()
+    {
+        // Arrange
+        var context = GetInMemoryDbContext("TestDbSatisfactionSummaryNoData");
+        var controller = new SurveyController(context);
+
+        // Act
+        var result = await controller.GetSatisfactionSummary();
+
+        // Assert
+        var actionResult = Assert.IsType<ActionResult<IEnumerable<SatisfactionSummary>>>(result);
+        var okResult = Assert.IsType<OkObjectResult>(actionResult.Result);
+
+        var returnValue = Assert.IsType<List<SatisfactionSummary>>(okResult.Value);
+
+        Assert.NotNull(returnValue);
+        Assert.Empty(returnValue);  // Kontrollera att listan är tom när ingen data matchar
     }
 
 }
