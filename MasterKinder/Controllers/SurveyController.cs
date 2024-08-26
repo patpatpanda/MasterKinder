@@ -123,10 +123,11 @@ namespace MasterKinderAPI.Controllers
                 TotaltAntalSvar = totaltAntalSvar
             });
         }
-
         [HttpGet("svarsalternativ")]
-        public async Task<IActionResult> GetSvarsalternativResponses(int year, string forskoleverksamhet, string fragetext, string frageNr)
+        public async Task<IActionResult> GetSvarsalternativResponses(int year, string forskoleverksamhet, string fragetext = null, string frageNr = null)
         {
+            Console.WriteLine($"Received: year={year}, forskoleverksamhet={forskoleverksamhet}, fragetext={fragetext}, frageNr={frageNr}");
+
             if (string.IsNullOrEmpty(forskoleverksamhet))
             {
                 return BadRequest("Förskoleverksamhet måste anges.");
@@ -157,7 +158,6 @@ namespace MasterKinderAPI.Controllers
                     return BadRequest("Ogiltigt år.");
             }
 
-            // Hämta alla svar för den specifika frågan vid den angivna förskoleverksamheten
             query = query.Where(s => s.Forskoleverksamhet == forskoleverksamhet);
 
             if (!string.IsNullOrEmpty(fragetext))
@@ -170,10 +170,13 @@ namespace MasterKinderAPI.Controllers
                 query = query.Where(s => s.FrageNr == frageNr);
             }
 
-            // Hämta datan som rådata
             var responses = await query.ToListAsync();
 
-            // Gruppera och summera resultaten i minnet
+            if (!responses.Any())
+            {
+                return Ok(new List<object>());
+            }
+
             var aggregatedData = responses
                 .GroupBy(s => s.SvarsalternativText)
                 .Select(g => new
@@ -312,7 +315,7 @@ namespace MasterKinderAPI.Controllers
             return Ok(satisfactionData);
         }
 
-        public class SatisfactionSummary
+         public class SatisfactionSummary
         {
             public string Forskoleverksamhet { get; set; }
             public string Year { get; set; }
