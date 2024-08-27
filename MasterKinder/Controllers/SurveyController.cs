@@ -314,8 +314,59 @@ namespace MasterKinderAPI.Controllers
 
             return Ok(satisfactionData);
         }
+        [HttpGet("satisfaction-summary/name/{name}")]
+        public async Task<ActionResult<IEnumerable<SatisfactionSummary>>> GetSatisfactionSummaryByName(string name)
+        {
+            string normalizedSearchName = NormalizeName(name);
+            string[] searchWords = name.Split(' ');
 
-         public class SatisfactionSummary
+            // Första sökning: försök att hitta baserat på Namn och NormalizedNamn
+            var satisfactionData = await _context.SurveyResponses
+                .Where(s => s.Fragetext == "Jag är som helhet nöjd med mitt barns förskola")
+                .Where(s => EF.Functions.Like(s.Forskoleverksamhet, $"%{name}%") || EF.Functions.Like(s.Forskoleverksamhet, $"%{normalizedSearchName}%"))
+                .GroupBy(s => new { s.Forskoleverksamhet, s.AvserAr })
+                .Select(g => new SatisfactionSummary
+                {
+                    Forskoleverksamhet = g.Key.Forskoleverksamhet,
+                    Year = g.Key.AvserAr,
+                    TotalResponses = g.Count(),
+                    PositiveResponses = g.Count(s => s.SvarsalternativText == "Instämmer helt" || s.SvarsalternativText == "Instämmer i stor utsträckning")
+                })
+                .ToListAsync();
+
+            // Om inga träffar, försök att söka på varje ord individuellt
+            if (!satisfactionData.Any())
+            {
+                var query = _context.SurveyResponses
+                    .Where(s => s.Fragetext == "Jag är som helhet nöjd med mitt barns förskola")
+                    .AsQueryable();
+
+                foreach (var word in searchWords)
+                {
+                    string normalizedWord = NormalizeName(word);
+                    query = query.Where(s => EF.Functions.Like(s.Forskoleverksamhet, $"%{word}%") || EF.Functions.Like(s.Forskoleverksamhet, $"%{normalizedWord}%"));
+                }
+
+                satisfactionData = await query
+                    .GroupBy(s => new { s.Forskoleverksamhet, s.AvserAr })
+                    .Select(g => new SatisfactionSummary
+                    {
+                        Forskoleverksamhet = g.Key.Forskoleverksamhet,
+                        Year = g.Key.AvserAr,
+                        TotalResponses = g.Count(),
+                        PositiveResponses = g.Count(s => s.SvarsalternativText == "Instämmer helt" || s.SvarsalternativText == "Instämmer i stor utsträckning")
+                    })
+                    .ToListAsync();
+            }
+
+            if (!satisfactionData.Any())
+            {
+                return NotFound();
+            }
+
+            return Ok(satisfactionData);
+        }
+        public class SatisfactionSummary
         {
             public string Forskoleverksamhet { get; set; }
             public string Year { get; set; }
