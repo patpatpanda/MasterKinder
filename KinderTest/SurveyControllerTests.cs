@@ -79,8 +79,8 @@ public class SurveyControllerTests
     {
         // Arrange
         var context = GetInMemoryDbContext("TestDb3");
-        context.SurveyResponses.Add(new SurveyResponse { Forskoleverksamhet = "XYZ", Fragetext = "ABC", SvarsalternativText = "3", Utfall = "10" });
-        context.SurveyResponses.Add(new SurveyResponse { Forskoleverksamhet = "XYZ", Fragetext = "ABC", SvarsalternativText = "1", Utfall = "5" });
+        context.SurveyResponses.Add(new SurveyResponse { Forskoleverksamhet = "XYZ", Fragetext = "ABC", SvarsalternativText = "3", Utfall = 10 });
+        context.SurveyResponses.Add(new SurveyResponse { Forskoleverksamhet = "XYZ", Fragetext = "ABC", SvarsalternativText = "1", Utfall = 5 });
         await context.SaveChangesAsync();
 
         var controller = new SurveyController(context);
@@ -154,9 +154,9 @@ public class SurveyControllerTests
     {
         // Arrange
         var context = GetInMemoryDbContext("TestDb7");
-        context.SurveyResponses.Add(new SurveyResponse { Forskoleverksamhet = "XYZ", Fragetext = "ABC", SvarsalternativText = "Alternativ1", Utfall = "5" });
-        context.SurveyResponses.Add(new SurveyResponse { Forskoleverksamhet = "XYZ", Fragetext = "ABC", SvarsalternativText = "Alternativ2", Utfall = "10" });
-        context.SurveyResponses.Add(new SurveyResponse { Forskoleverksamhet = "XYZ", Fragetext = "ABC", SvarsalternativText = "Alternativ1", Utfall = "15" });
+        context.SurveyResponses.Add(new SurveyResponse { Forskoleverksamhet = "XYZ", Fragetext = "ABC", SvarsalternativText = "Alternativ1", Utfall = 5 });
+        context.SurveyResponses.Add(new SurveyResponse { Forskoleverksamhet = "XYZ", Fragetext = "ABC", SvarsalternativText = "Alternativ2", Utfall = 10 });
+        context.SurveyResponses.Add(new SurveyResponse { Forskoleverksamhet = "XYZ", Fragetext = "ABC", SvarsalternativText = "Alternativ1", Utfall = 15 });
         await context.SaveChangesAsync();
 
         var controller = new SurveyController(context);
@@ -295,7 +295,7 @@ public class SurveyControllerTests
     {
         // Arrange
         var context = GetInMemoryDbContext("TestDbOnlyFragetext");
-        context.SurveyResponses.Add(new SurveyResponse { Forskoleverksamhet = "XYZ", Fragetext = "ABC", SvarsalternativText = "3", Utfall = "10" });
+        context.SurveyResponses.Add(new SurveyResponse { Forskoleverksamhet = "XYZ", Fragetext = "ABC", SvarsalternativText = "3", Utfall = 10 });
         await context.SaveChangesAsync();
 
         var controller = new SurveyController(context);

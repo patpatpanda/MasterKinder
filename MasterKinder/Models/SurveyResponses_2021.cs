@@ -57,8 +57,8 @@ namespace MasterKinder.Models
         [MaxLength(255)]
         public string? AntalSvarsalternativ { get; set; }
 
-        [MaxLength(255)]
-        public string? SvarsalternativNr { get; set; }
+        // Ändrad från string? till int
+        public int SvarsalternativNr { get; set; }
 
         [MaxLength(200)]
         public string? SvarsalternativText { get; set; }
@@ -75,13 +75,13 @@ namespace MasterKinder.Models
         [MaxLength(255)]
         public string? Kon { get; set; }
 
-        [MaxLength(255)]
-        public string? Utfall { get; set; }
+        // Ändrad från string? till int
+        public int Utfall { get; set; }
 
-        [MaxLength(255)]
-        public string? TotalVarde { get; set; }
+        // Ändrad från string? till int
+        public int TotalVarde { get; set; }
 
-        [MaxLength(255)]
-        public string? TotalVarde_ExklVetEj { get; set; }
+        // Ändrad från string? till int
+        public int TotalVarde_ExklVetEj { get; set; }
     }
 }

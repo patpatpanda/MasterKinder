@@ -17,6 +17,56 @@ namespace MasterKinderAPI.Controllers
         {
             _context = context;
         }
+        [HttpGet("Results/{year}/{forskoleverksamhet}")]
+        public async Task<IActionResult> GetSurveyResults(int year, string forskoleverksamhet)
+        {
+            IQueryable<ISurveyResponse> query;
+
+            // Välj rätt tabell beroende på år
+            switch (year)
+            {
+                case 2020:
+                    query = _context.SurveyResponses;
+                    break;
+                case 2021:
+                    query = _context.SurveyResponses2021;
+                    break;
+                case 2022:
+                    query = _context.SurveyResponses2022;
+                    break;
+                case 2023:
+                    query = _context.SurveyResponses2023;
+                    break;
+                default:
+                    return BadRequest("Ogiltigt år.");
+            }
+
+            // Normalisera namnet för att använda det i sökningen
+            string normalizedForskoleverksamhet = NormalizeName(forskoleverksamhet);
+
+            // Filtrera på frågetext och normaliserat forskoleverksamhet
+            var relevantResponses = await query
+                .Where(r => r.Fragetext == "Jag är som helhet nöjd med mitt barns förskola"
+                            && (EF.Functions.Like(r.Forskoleverksamhet, $"%{forskoleverksamhet}%") || EF.Functions.Like(r.Forskoleverksamhet, $"%{normalizedForskoleverksamhet}%")))
+                .GroupBy(r => r.Forskoleverksamhet)
+                .Select(g => new
+                {
+                    Forskoleverksamhet = g.Key,
+                    TotalSvar = g.Sum(x => (x.SvarsalternativNr >= 1 && x.SvarsalternativNr <= 5) ? x.Utfall : 0), // Korrekt beräkning av TotalSvar
+                    ProcentSvarAlternativ = g.GroupBy(r => r.SvarsalternativNr)
+                                             .Select(sg => new
+                                             {
+                                                 Svarsalternativ = sg.Key,
+                                                 Procent = g.Sum(y => y.Utfall) == 0 ? 0 : (double)sg.Sum(x => x.Utfall) / (double)g.Sum(y => y.Utfall) * 100
+                                             })
+                                             .OrderBy(sg => sg.Svarsalternativ)
+                                             .ToList()
+                })
+                .ToListAsync();
+
+            return Ok(relevantResponses);
+        }
+
 
         // GET: api/Survey?year=2020&forskoleverksamhet=XYZ&fragetext=ABC
         [HttpGet]
@@ -104,17 +154,18 @@ namespace MasterKinderAPI.Controllers
 
             // Räkna antalet nöjda svar
             var antalNöjdaSvar = responses
-                .Where(s => s.SvarsalternativText == "3" ||
-                            s.SvarsalternativText == "4" ||
-                            s.SvarsalternativText == "5" ||
-                            s.SvarsalternativText == "Instämmer" ||
-                            s.SvarsalternativText == "Instämmer i stor utsträckning" ||
-                            s.SvarsalternativText == "Instämmer helt")
-                .Sum(s => string.IsNullOrEmpty(s.Utfall) ? 0 : int.TryParse(s.Utfall, out var value) ? value : 0);
+     .Where(s => s.SvarsalternativText == "3" ||
+                 s.SvarsalternativText == "4" ||
+                 s.SvarsalternativText == "5" ||
+                 s.SvarsalternativText == "Instämmer" ||
+                 s.SvarsalternativText == "Instämmer i stor utsträckning" ||
+                 s.SvarsalternativText == "Instämmer helt")
+     .Sum(s => s.Utfall);  // Använd Utfall direkt eftersom det är en int
+
 
             // Räkna det totala antalet svar för frågan
-            var totaltAntalSvar = responses
-                .Sum(s => string.IsNullOrEmpty(s.Utfall) ? 0 : int.TryParse(s.Utfall, out var value) ? value : 0);
+            var totaltAntalSvar = responses.Sum(s => s.Utfall);  // Använd Utfall direkt eftersom det är en int
+
 
             // Returnera både antalet nöjda svar och det totala antalet svar
             return Ok(new
@@ -182,8 +233,9 @@ namespace MasterKinderAPI.Controllers
                 .Select(g => new
                 {
                     SvarsalternativText = g.Key,
-                    Utfall = g.Sum(s => int.TryParse(s.Utfall, out var value) ? value : 0)
-                })
+                    Utfall = g.Sum(s => s.Utfall) // Använd Utfall direkt eftersom det redan är en int
+
+        })
                 .ToList();
 
             return Ok(aggregatedData);
