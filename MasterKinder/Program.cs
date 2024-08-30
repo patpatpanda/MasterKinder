@@ -21,7 +21,11 @@ builder.Services.AddControllers()
 
 // Configure DbContexts
 builder.Services.AddDbContext<MrDb>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultSQLConnection")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultSQLConnection"),
+        sqlServerOptions => sqlServerOptions.CommandTimeout(300) // Timeout in seconds, here it's set to 300 seconds (5 minutes)
+    ));
+
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter(); // Lägg till denna rad
 
