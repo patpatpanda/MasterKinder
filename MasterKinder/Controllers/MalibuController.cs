@@ -18,21 +18,19 @@ namespace MasterKinder.Controllers
             _context = context;
         }
 
-        // GET: api/Malibu/name/{name}
         [HttpGet("name/{name}")]
         public async Task<ActionResult<IEnumerable<Malibu>>> GetMalibuByName(string name)
         {
-            // Normalisera söksträngen
             string normalizedSearchName = NormalizeName(name);
             string[] searchWords = name.Split(' ');
 
-            // Första sökning: försök att hitta baserat på Namn och NormalizedNamn
+            // Försök att hitta genom normaliserade namn
             var malibus = await _context.Malibus
                 .Include(m => m.Questions)
                 .Where(m => EF.Functions.Like(m.Namn, $"%{name}%") || EF.Functions.Like(m.NormalizedNamn, $"%{normalizedSearchName}%"))
                 .ToListAsync();
 
-            // Om inga träffar, försök med att söka på varje ord individuellt
+            // Om inga träffar, sök baserat på ord
             if (!malibus.Any())
             {
                 var query = _context.Malibus.Include(m => m.Questions).AsQueryable();
@@ -57,7 +55,7 @@ namespace MasterKinder.Controllers
             if (string.IsNullOrWhiteSpace(name)) return name;
 
             // Ta bort vanliga prefix och trimma resultatet
-            string[] prefixes = { "Förskolan", "Föräldrakooperativet", "Föräldrakooperativ", "Daghemmet", "Daghem", "Barnstugan", "Montessoriförskolan", "Montessori", "Engelsk-svenska","," };
+            string[] prefixes = { "Förskolan", "Föräldrakooperativet", "Föräldrakooperativ", "Daghemmet", "Daghem", "Barnstugan", "Montessoriförskolan", "Montessori", "Engelsk-svenska" };
             foreach (var prefix in prefixes)
             {
                 if (name.StartsWith(prefix, System.StringComparison.OrdinalIgnoreCase))
@@ -66,8 +64,16 @@ namespace MasterKinder.Controllers
                 }
             }
 
+            // Hantera specialtecken som tankstreck och ersätt dem med mellanslag
+            name = name.Replace("–", " ").Replace("-", " ");
+
+            // Sortera orden för att hantera olika ordning på namn
+            var words = name.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            Array.Sort(words);
+
             // Gör namnet till gemener och ta bort eventuella extra mellanslag
-            return name.ToLower().Trim().Replace(" ", "");
+            return string.Join(" ", words).ToLower().Trim().Replace(" ", "");
         }
+
     }
 }
