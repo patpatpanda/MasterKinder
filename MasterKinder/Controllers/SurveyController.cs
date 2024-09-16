@@ -235,7 +235,7 @@ namespace MasterKinderAPI.Controllers
                     SvarsalternativText = g.Key,
                     Utfall = g.Sum(s => s.Utfall) // Använd Utfall direkt eftersom det redan är en int
 
-        })
+                })
                 .ToList();
 
             return Ok(aggregatedData);

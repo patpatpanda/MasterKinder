@@ -34,28 +34,37 @@ public class Scraper
                     var document = new HtmlDocument();
                     document.LoadHtml(content);
 
-                    // Kontrollera om sidan är tom genom att kontrollera ett specifikt element som borde finnas
-                    if (string.IsNullOrWhiteSpace(GetInnerText(document, "//h1")))
-                    {
-                        Console.WriteLine($"No content found for ID: {id} from URL: {url}. Skipping.");
-                        continue;
-                    }
-
                     var adress = HtmlDecode(GetInnerText(document, "//p[@class='mb-small']"));
                     var bildUrl = GetAttribute(document, "//img[contains(@src, '/optimized/serviceunitspage/filer/hitta')]", "src");
 
+                    // Uppdaterade XPath-uttryck med HTML-enkodade tecken
+                    var inneOchUtemiljo = HtmlDecode(GetInnerText(document, "//h2[contains(text(), 'Inne- och utemilj&#xF6;')]/following-sibling::p[1]"));
+                    var kostOchMaltider = HtmlDecode(GetInnerText(document, "//h2[contains(text(), 'Kost och m&#xE5;ltider')]/following-sibling::p[1]"));
+                    var malOchVision = HtmlDecode(GetInnerText(document, "//h2[contains(text(), 'M&#xE5;l och vision')]/following-sibling::p[1]"));
+
+                    // Console-loggar för att se om data hämtas korrekt
+                    Console.WriteLine($"ID: {id}, Adress: {adress}");
+                    Console.WriteLine($"InneOchUtemiljo: {inneOchUtemiljo}");
+                    Console.WriteLine($"KostOchMaltider: {kostOchMaltider}");
+                    Console.WriteLine($"MalOchVision: {malOchVision}");
+
                     if (!string.IsNullOrEmpty(adress) && !string.IsNullOrEmpty(bildUrl))
                     {
-                        // Bygg den fullständiga URLen för bilden
                         var fullBildUrl = new Uri(new Uri(url), bildUrl).ToString();
 
                         var forskolan = await _context.Forskolans.FirstOrDefaultAsync(f => f.Adress == adress);
                         if (forskolan != null)
                         {
                             forskolan.BildUrl = fullBildUrl;
+
+                            // Uppdatera de nya fälten om de inte är tomma
+                            forskolan.InneOchUtemiljo = !string.IsNullOrEmpty(inneOchUtemiljo) ? inneOchUtemiljo : forskolan.InneOchUtemiljo;
+                            forskolan.KostOchMaltider = !string.IsNullOrEmpty(kostOchMaltider) ? kostOchMaltider : forskolan.KostOchMaltider;
+                            forskolan.MalOchVision = !string.IsNullOrEmpty(malOchVision) ? malOchVision : forskolan.MalOchVision;
+
                             await _context.SaveChangesAsync();
-                            Console.WriteLine($"Successfully updated image for Forskolan with address: {adress}");
-                            return true; // Indikerar att skrapningen lyckades
+                            Console.WriteLine($"Successfully updated Forskolan with address: {adress}");
+                            return true;
                         }
                         else
                         {
@@ -79,9 +88,11 @@ public class Scraper
             }
         }
 
-        return false; // Indikerar att skrapningen misslyckades eller sidan var tom
+        return false;
     }
 
+
+    // Hjälpmetoder som används i koden ovan
     private string GetInnerText(HtmlDocument document, string xpath)
     {
         var node = document.DocumentNode.SelectSingleNode(xpath);
@@ -97,6 +108,21 @@ public class Scraper
     {
         return WebUtility.HtmlDecode(text);
     }
+
+    private string GetAttribute(HtmlDocument document, string xpath, string attribute)
+    {
+        var node = document.DocumentNode.SelectSingleNode(xpath);
+        if (node == null)
+        {
+            Console.WriteLine($"Node not found for XPath: {xpath}");
+            return string.Empty;
+        }
+        return node.GetAttributeValue(attribute, string.Empty).Trim();
+    }
+
+
+
+    
 
     private int ParseInt(string text)
     {
@@ -116,15 +142,6 @@ public class Scraper
         return ParseDouble(text);
     }
 
-    private string GetAttribute(HtmlDocument document, string xpath, string attribute)
-    {
-        var node = document.DocumentNode.SelectSingleNode(xpath);
-        if (node == null)
-        {
-            Console.WriteLine($"Node not found for XPath: {xpath}");
-            return string.Empty;
-        }
-        return node.GetAttributeValue(attribute, string.Empty).Trim();
-    }
+   
 
 }

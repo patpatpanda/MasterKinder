@@ -49,21 +49,46 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Run the main method
-await MainMethod(app.Services);
+// Hämta start- och slut-ID från kommandoradsargument
+var commandLineArgs = Environment.GetCommandLineArgs();
+int.TryParse(commandLineArgs.ElementAtOrDefault(1), out int startId);
+int.TryParse(commandLineArgs.ElementAtOrDefault(2), out int endId);
+
+// Om argument inte tillhandahålls, sätt startId och endId
+if (startId == 0) startId = 15000;
+if (endId == 0) endId = 16000;
+
+// Kör huvudskrapningsmetoden
+await MainMethod(app.Services, startId, endId);
 
 app.Run();
 
-async Task MainMethod(IServiceProvider services)
+async Task MainMethod(IServiceProvider services, int startId, int endId)
 {
+    // Definiera batch-storlek
+    const int batchSize = 5;
+
     // Räkna alla poster i Forskolans
     int totalForskolans = await CountAllForskolansAsync(services);
     Console.WriteLine($"Total number of Forskolans: {totalForskolans}");
 
-    // Exempel på att köra skrapning och andra operationer
-    await RunScraperAsync(services, 12080, 12100);
+    // Kör skrapning i batchar tills alla sidor har skrapats
+    while (startId <= endId)
+    {
+        // Bestäm slutet för den aktuella batchen
+        int currentEndId = Math.Min(startId + batchSize - 1, endId);
 
+        // Kör skrapning för den aktuella batchen
+        await RunScraperAsync(services, startId, currentEndId);
 
+        // Uppdatera start-ID för nästa batch
+        startId = currentEndId + 1;
+
+        // Valfri fördröjning mellan batchar för att undvika överbelastning av servern
+        await Task.Delay(1000); // 1 sekund fördröjning mellan varje batch
+    }
+
+    Console.WriteLine("Scraping process completed for all pages.");
 }
 
 async Task<int> CountAllForskolansAsync(IServiceProvider services)
@@ -78,7 +103,7 @@ async Task RunScraperAsync(IServiceProvider services, int startId, int endId)
     using var scope = services.CreateScope();
     var scraper = scope.ServiceProvider.GetRequiredService<Scraper>();
 
-    int totalEmptyPages = 0; // Totalt antal tomma sidor
+    int totalEmptyPages = 0;
     int totalPages = endId - startId + 1;
 
     for (int id = startId; id <= endId; id++)
@@ -91,8 +116,7 @@ async Task RunScraperAsync(IServiceProvider services, int startId, int endId)
             Console.WriteLine($"Empty page count: {totalEmptyPages}");
         }
 
-        // Valfri fördröjning för att minska belastningen på servern
-        await Task.Delay(100); // 100 ms fördröjning
+        await Task.Delay(100); // Fördröjning för att undvika överbelastning
 
         // Valfritt: Lägg till logik för att skriva ut framsteg
         if (id % 100 == 0)
@@ -101,7 +125,5 @@ async Task RunScraperAsync(IServiceProvider services, int startId, int endId)
         }
     }
 
-    Console.WriteLine($"Scraping process completed. Total empty pages: {totalEmptyPages}");
+    Console.WriteLine($"Scraping process completed for range {startId} to {endId}. Total empty pages: {totalEmptyPages}");
 }
-
-

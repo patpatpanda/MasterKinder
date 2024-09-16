@@ -36,15 +36,23 @@ namespace MasterKinder.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Forskolan>> GetForskolan(int id)
         {
-            var forskolan = await _context.Forskolans.Include(f => f.Kontakter).FirstOrDefaultAsync(f => f.Id == id);
+            var forskolan = await _context.Forskolans
+                .Include(f => f.Kontakter)
+                .FirstOrDefaultAsync(f => f.Id == id);
 
             if (forskolan == null)
             {
                 return NotFound();
             }
 
+            // Kontrollera att fälten finns och inkludera dem
+            forskolan.InneOchUtemiljo = forskolan.InneOchUtemiljo ?? "Ingen information";
+            forskolan.KostOchMaltider = forskolan.KostOchMaltider ?? "Ingen information";
+            forskolan.MalOchVision = forskolan.MalOchVision ?? "Ingen information";
+
             return forskolan;
         }
+
 
         // GET: api/Forskolan/address/{address}
         [HttpGet("address/{address}")]

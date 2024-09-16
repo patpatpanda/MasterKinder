@@ -57,7 +57,7 @@ namespace MasterKinder.Controllers
             if (string.IsNullOrWhiteSpace(name)) return name;
 
             // Ta bort vanliga prefix och trimma resultatet
-            string[] prefixes = { "Förskolan", "Föräldrakooperativet", "Föräldrakooperativ", "Daghemmet", "Daghem", "Barnstugan", "Montessoriförskolan", "Montessori", "Engelsk-svenska" };
+            string[] prefixes = { "Förskolan", "Föräldrakooperativet", "Föräldrakooperativ", "Daghemmet", "Daghem", "Barnstugan", "Montessoriförskolan", "Montessori", "Engelsk-svenska","," };
             foreach (var prefix in prefixes)
             {
                 if (name.StartsWith(prefix, System.StringComparison.OrdinalIgnoreCase))
