@@ -44,15 +44,23 @@ namespace MasterKinderAPI.Controllers
             // Normalisera namnet för att använda det i sökningen
             string normalizedForskoleverksamhet = NormalizeName(forskoleverksamhet);
 
-            // Filtrera på frågetext och normaliserat forskoleverksamhet
+            // Frågetexter att inkludera
+            var fragetexter = new List<string>
+    {
+        "Jag är som helhet nöjd med mitt barns förskola",
+        "Jag kan rekommendera mitt barns förskola"
+    };
+
+            // Filtrera på normaliserat forskoleverksamhet och endast de specifika frågetexterna
             var relevantResponses = await query
-                .Where(r => r.Fragetext == "Jag är som helhet nöjd med mitt barns förskola"
+                .Where(r => fragetexter.Contains(r.Fragetext)
                             && (EF.Functions.Like(r.Forskoleverksamhet, $"%{forskoleverksamhet}%") || EF.Functions.Like(r.Forskoleverksamhet, $"%{normalizedForskoleverksamhet}%")))
-                .GroupBy(r => r.Forskoleverksamhet)
+                .GroupBy(r => new { r.Forskoleverksamhet, r.Fragetext })
                 .Select(g => new
                 {
-                    Forskoleverksamhet = g.Key,
-                    TotalSvar = g.Sum(x => (x.SvarsalternativNr >= 1 && x.SvarsalternativNr <= 5) ? x.Utfall : 0), // Korrekt beräkning av TotalSvar
+                    Forskoleverksamhet = g.Key.Forskoleverksamhet,
+                    Fragetext = g.Key.Fragetext,
+                    TotalSvar = g.Sum(x => (x.SvarsalternativNr >= 1 && x.SvarsalternativNr <= 5) ? x.Utfall : 0),
                     ProcentSvarAlternativ = g.GroupBy(r => r.SvarsalternativNr)
                                              .Select(sg => new
                                              {

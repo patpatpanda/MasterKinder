@@ -6,12 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System.Collections.Generic;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,8 +50,8 @@ int.TryParse(commandLineArgs.ElementAtOrDefault(1), out int startId);
 int.TryParse(commandLineArgs.ElementAtOrDefault(2), out int endId);
 
 // Om argument inte tillhandahålls, sätt startId och endId
-if (startId == 0) startId = 15000;
-if (endId == 0) endId = 16000;
+if (startId == 0) startId = 11850;
+if (endId == 0) endId = 12000;
 
 // Kör huvudskrapningsmetoden
 await MainMethod(app.Services, startId, endId);
