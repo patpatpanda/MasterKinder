@@ -4,6 +4,7 @@
     {
         int Id { get; set; }
         string? Forskoleverksamhet { get; set; }
+         string? AvserAr { get; set; }
         string? Fragetext { get; set; }
         string? GraderingSvarsalternativ { get; set; }
         int Utfall { get; set; }  // Ändrat från string? till int

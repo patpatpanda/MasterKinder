@@ -71,14 +71,7 @@ namespace MasterKinder.Controllers
         }
 
         // POST: api/Forskolan
-        [HttpPost]
-        public async Task<ActionResult<Forskolan>> PostForskolan(Forskolan forskolan)
-        {
-            _context.Forskolans.Add(forskolan);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetForskolan", new { id = forskolan.Id }, forskolan);
-        }
+       
 
         [HttpGet("geocode/{address}")]
         public async Task<ActionResult<GeocodeResult>> GeocodeAddress(string address)
@@ -101,50 +94,9 @@ namespace MasterKinder.Controllers
         }
 
         // PUT: api/Forskolan/{id}
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutForskolan(int id, Forskolan forskolan)
-        {
-            if (id != forskolan.Id)
-            {
-                return BadRequest();
-            }
+       
 
-            _context.Entry(forskolan).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ForskolanExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // DELETE: api/Forskolan/{id}
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteForskolan(int id)
-        {
-            var forskolan = await _context.Forskolans.FindAsync(id);
-            if (forskolan == null)
-            {
-                return NotFound();
-            }
-
-            _context.Forskolans.Remove(forskolan);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
+        
 
         [HttpGet("nearby/{lat}/{lng}")]
         public async Task<ActionResult<IEnumerable<Forskolan>>> GetNearbyForskolans(

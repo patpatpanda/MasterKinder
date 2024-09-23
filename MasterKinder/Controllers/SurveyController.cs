@@ -48,7 +48,14 @@ namespace MasterKinderAPI.Controllers
             var fragetexter = new List<string>
     {
         "Jag är som helhet nöjd med mitt barns förskola",
-        "Jag kan rekommendera mitt barns förskola"
+        "Jag kan rekommendera mitt barns förskola",
+        "Jag upplever att personalen på förskolan bemöter mig på ett respektfullt sätt",
+        "Jag upplever att personalen på förskolan bemöter mitt barn på ett respektfullt sätt",
+        "Jag känner mig välkommen att ställa frågor och framföra synpunkter på verksamheten",
+        "Mitt barns utveckling och lärande dokumenteras och synliggörs",
+        "Jag upplever att jag på ett enkelt sätt kan kommunicera digitalt med mitt barns förskola",
+        "Jag upplever att förskolan i sin helhet är trygg och säker för mitt barn",
+        "Jag upplever att mitt barn ges möjlighet att använda digitala verktyg i sitt lärande"
     };
 
             // Filtrera på normaliserat forskoleverksamhet och endast de specifika frågetexterna
