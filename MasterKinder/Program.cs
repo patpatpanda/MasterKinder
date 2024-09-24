@@ -26,7 +26,7 @@ builder.Services.AddDbContext<MrDb>(options =>
         sqlServerOptions => sqlServerOptions.CommandTimeout(300) // Timeout in seconds, here it's set to 300 seconds (5 minutes)
     ));
 
-
+builder.Services.AddMemoryCache();
 builder.Services.AddDatabaseDeveloperPageExceptionFilter(); // Lägg till denna rad
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
