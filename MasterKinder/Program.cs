@@ -1,9 +1,13 @@
 using MasterKinder.Data;
 using MasterKinder.Services;
+using MasterKinder.Models; // Se till att inkludera ApplicationUser-modellen
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,25 +33,56 @@ builder.Services.AddDbContext<MrDb>(options =>
 builder.Services.AddMemoryCache();
 builder.Services.AddDatabaseDeveloperPageExceptionFilter(); // Lägg till denna rad
 
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddEntityFrameworkStores<MrDb>();
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+    };
+});
 
-builder.Services.AddMemoryCache(); // Lägg till denna rad för att registrera IMemoryCache
+// Add Identity services with ApplicationUser model
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false;
+})
+    .AddEntityFrameworkStores<MrDb>()  // Use your own DbContext (MrDb)
+    .AddDefaultTokenProviders();       // Add token providers for password reset, etc.
 
+// Add memory cache services
+builder.Services.AddMemoryCache();
+
+// Add HttpClient services
 builder.Services.AddHttpClient<GeocodeService>();
 
-// Add CORS policy
+// Add CORS policy (allow both localhost and production URL)
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", builder =>
+    options.AddPolicy("AllowSpecificOrigins", builder =>
     {
-        builder.AllowAnyOrigin()
+        builder.WithOrigins("http://localhost:3000", "https://xn--frskolekollen-imb.se")
                .AllowAnyMethod()
-               .AllowAnyHeader();
+               .AllowAnyHeader()
+               .AllowCredentials(); // If necessary for cookies (though JWT doesn’t need them)
     });
 });
 
 var app = builder.Build();
+app.UseAuthentication(); // Add this before Authorization
+app.UseAuthorization();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -59,6 +94,7 @@ else
 {
     app.UseDeveloperExceptionPage(); // Lägg till denna rad för att visa detaljerade fel i utvecklingsläge
 }
+
 app.Use(async (context, next) =>
 {
     Console.WriteLine($"Handling request: {context.Request.Path}");
@@ -69,7 +105,9 @@ app.Use(async (context, next) =>
 app.UseHttpsRedirection();
 app.UseStaticFiles(); // Serve static files from wwwroot
 app.UseRouting();
-app.UseCors("AllowAll"); // Make sure CORS is used
+app.UseCors("AllowSpecificOrigins"); // Använd samma CORS-policy överallt
+
+// Use Authentication and Authorization middleware
 app.UseAuthentication(); // Lägg till detta för att aktivera autentisering
 app.UseAuthorization();
 

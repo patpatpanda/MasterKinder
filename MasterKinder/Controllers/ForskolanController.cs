@@ -25,6 +25,7 @@ namespace MasterKinder.Controllers
             _logger = logger;
         }
 
+
         // GET: api/Forskolan
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Forskolan>>> GetForskolans()
