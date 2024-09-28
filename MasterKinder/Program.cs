@@ -4,10 +4,10 @@ using MasterKinder.Models; // Se till att inkludera ApplicationUser-modellen
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.ApplicationInsights.Extensibility;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,12 +27,16 @@ builder.Services.AddControllers()
 builder.Services.AddDbContext<MrDb>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultSQLConnection"),
-        sqlServerOptions => sqlServerOptions.CommandTimeout(300) // Timeout in seconds, here it's set to 300 seconds (5 minutes)
+        sqlServerOptions => sqlServerOptions.CommandTimeout(90) // Timeout set to 90 seconds
     ));
 
+// Add memory cache services
 builder.Services.AddMemoryCache();
-builder.Services.AddDatabaseDeveloperPageExceptionFilter(); // Lägg till denna rad
 
+// Add Database Developer Page Exception Filter (useful for debugging in development)
+builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+// Configure JWT Authentication
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -57,18 +61,15 @@ builder.Services.AddAuthentication(options =>
 // Add Identity services with ApplicationUser model
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
-    options.SignIn.RequireConfirmedAccount = false;
+    options.SignIn.RequireConfirmedAccount = false; // Set according to your confirmation policy
 })
-    .AddEntityFrameworkStores<MrDb>()  // Use your own DbContext (MrDb)
+    .AddEntityFrameworkStores<MrDb>()  // Use your custom DbContext (MrDb)
     .AddDefaultTokenProviders();       // Add token providers for password reset, etc.
 
-// Add memory cache services
-builder.Services.AddMemoryCache();
-
-// Add HttpClient services
+// Add HttpClient services for external API requests
 builder.Services.AddHttpClient<GeocodeService>();
 
-// Add CORS policy (allow both localhost and production URL)
+// Add CORS policy to allow requests from specific origins
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigins", builder =>
@@ -76,13 +77,18 @@ builder.Services.AddCors(options =>
         builder.WithOrigins("http://localhost:3000", "https://xn--frskolekollen-imb.se")
                .AllowAnyMethod()
                .AllowAnyHeader()
-               .AllowCredentials(); // If necessary for cookies (though JWT doesn’t need them)
+               .AllowCredentials(); // Tillåt att skicka autentiseringsinformation
     });
 });
 
+
+
+
+
+// Lägg till Application Insights
+builder.Services.AddApplicationInsightsTelemetry();
+
 var app = builder.Build();
-app.UseAuthentication(); // Add this before Authorization
-app.UseAuthorization();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -92,9 +98,22 @@ if (!app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseDeveloperExceptionPage(); // Lägg till denna rad för att visa detaljerade fel i utvecklingsläge
+    app.UseDeveloperExceptionPage(); // Show detailed errors in development
 }
 
+app.UseHttpsRedirection();
+app.UseStaticFiles(); // Serve static files from wwwroot
+app.UseRouting();
+
+// Use CORS policy
+app.UseCors("AllowSpecificOrigins");
+
+// Use Authentication and Authorization
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+// Log requests and responses (optional, useful for debugging)
 app.Use(async (context, next) =>
 {
     Console.WriteLine($"Handling request: {context.Request.Path}");
@@ -102,21 +121,13 @@ app.Use(async (context, next) =>
     Console.WriteLine($"Finished handling request.");
 });
 
-app.UseHttpsRedirection();
-app.UseStaticFiles(); // Serve static files from wwwroot
-app.UseRouting();
-app.UseCors("AllowSpecificOrigins"); // Använd samma CORS-policy överallt
-
-// Use Authentication and Authorization middleware
-app.UseAuthentication(); // Lägg till detta för att aktivera autentisering
-app.UseAuthorization();
-
-app.MapControllers(); // Enable API routes
+// Map API controllers
+app.MapControllers();
 
 // Map Razor Pages
 app.MapRazorPages();
 
-// Serve the React app's index.html as a fallback for all other routes
+// Serve the React app's index.html as a fallback for all other routes (SPA support)
 app.MapFallbackToFile("{*path:nonfile}", "index.html");
 
 app.Run();

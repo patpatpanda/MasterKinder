@@ -87,31 +87,26 @@ namespace MasterKinder.Controllers
             {
                 if (!ModelState.IsValid)
                 {
-                    Console.WriteLine("ModelState är ogiltigt.");
                     return BadRequest(ModelState);
                 }
-
-                Console.WriteLine($"Registrerar användare med Email: {model.Email} och SchoolId: {model.SchoolId}");
 
                 var user = new ApplicationUser
                 {
                     UserName = model.Email,
                     Email = model.Email,
-                    SchoolId = model.SchoolId
+                    SchoolId = model.SchoolId  // Sätt SchoolId för den nya användaren
                 };
 
                 var result = await _userManager.CreateAsync(user, model.Password);
 
                 if (result.Succeeded)
                 {
-                    Console.WriteLine("Användare skapad med ID: " + user.Id);
                     await _signInManager.SignInAsync(user, isPersistent: false);
                     return Ok(new { userId = user.Id });
                 }
 
                 foreach (var error in result.Errors)
                 {
-                    Console.WriteLine($"Fel vid användarskapande: {error.Description}");
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
 
@@ -119,62 +114,115 @@ namespace MasterKinder.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Ett undantag inträffade: " + ex.Message);
                 return StatusCode(500, "Internt serverfel vid registrering.");
             }
         }
 
-
-
-        [HttpPut("update-school/{id}")]
-      
+        [HttpPost("update-school/{id}")]
         public async Task<IActionResult> UpdateSchool(int id, [FromBody] ForskolanUpdateModel model)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
+            List<string> logs = new List<string>();
+            logs.Add($"Mottog uppdateringsförfrågan för förskola {id}.");
+
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+            if (string.IsNullOrEmpty(token))
             {
-                return Unauthorized("Inloggad användare hittades inte.");
+                return Unauthorized(new { message = "Ingen token hittades." });
             }
 
-            if (user.SchoolId != id)
+            // Verifiera JWT-tokenen manuellt
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
+
+            try
             {
-                return Forbid("Du har inte behörighet att uppdatera denna förskola.");
-            }
+                tokenHandler.ValidateToken(token, new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = _configuration["Jwt:Issuer"],
+                    ValidAudience = _configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ClockSkew = TimeSpan.Zero // Optional: reduce the tolerance on the token expiry time
+                }, out SecurityToken validatedToken);
 
-            var school = await _context.Forskolans.FindAsync(id);
-            if (school == null)
+                var jwtToken = (JwtSecurityToken)validatedToken;
+                var userId = jwtToken.Claims.First(x => x.Type == "sub").Value;
+
+                // Hämta användaren med userId
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    logs.Add("Användaren hittades inte.");
+                    return Unauthorized(new { message = "Användaren är inte autentiserad." });
+                }
+
+                if (user.SchoolId != id)
+                {
+                    logs.Add($"Användare med SchoolId {user.SchoolId} försökte uppdatera skola {id} utan behörighet.");
+                    return new ObjectResult(new ResponseModel("Du har inte behörighet att uppdatera denna förskola.", logs))
+                    {
+                        StatusCode = StatusCodes.Status403Forbidden
+                    };
+                }
+
+                var school = await _context.Forskolans.FindAsync(id);
+                if (school == null)
+                {
+                    logs.Add($"Skola med id {id} hittades inte.");
+                    return new ObjectResult(new ResponseModel("Förskolan hittades inte.", logs))
+                    {
+                        StatusCode = StatusCodes.Status404NotFound
+                    };
+                }
+
+                logs.Add($"Uppdaterar förskolans beskrivning från '{school.Beskrivning}' till '{model.Beskrivning}'.");
+
+                school.Beskrivning = model.Beskrivning;
+                await _context.SaveChangesAsync();
+
+                logs.Add("Uppdateringen genomfördes framgångsrikt.");
+                return Ok(new ResponseModel("Uppdatering lyckades", logs));
+            }
+            catch (SecurityTokenException)
             {
-                return NotFound("Förskolan hittades inte.");
+                return Unauthorized(new { message = "Token är ogiltig eller har gått ut." });
             }
-
-            // Uppdatera förskolans beskrivning
-            school.Beskrivning = model.Beskrivning;
-
-            await _context.SaveChangesAsync();
-
-            return Ok(school);
         }
 
 
-    }
+        public class LoginModel
+        {
+            public string Email { get; set; }
+            public string Password { get; set; }
+        }
+        public class ResponseModel
+        {
+            public string Message { get; set; }
+            public List<string> Logs { get; set; }
 
-    public class LoginModel
-    {
-        public string Email { get; set; }
-        public string Password { get; set; }
-    }
+            public ResponseModel(string message, List<string> logs)
+            {
+                Message = message;
+                Logs = logs;
+            }
+        }
 
-    public class RegisterModel
-    {
-        public string Email { get; set; }
-        public string Password { get; set; }
-        public int SchoolId { get; set; } // Lägg till SchoolId i registreringsmodellen
-    }
+        public class RegisterModel
+        {
+            public string Email { get; set; }
+            public string Password { get; set; }
+            public int SchoolId { get; set; } // Lägg till SchoolId i registreringsmodellen
+        }
 
-    public class ForskolanUpdateModel
-    {
-       
-        public string Beskrivning { get; set; }
-        // Andra fält...
+        public class ForskolanUpdateModel
+        {
+
+            public string? Beskrivning { get; set; }
+            // Andra fält...
+        }
     }
 }

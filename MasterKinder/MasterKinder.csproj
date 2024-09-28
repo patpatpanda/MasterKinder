@@ -7,14 +7,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="wwwroot\static\css\main.264be551.css.map" />
     <None Include="wwwroot\static\css\main.5024556f.css.map" />
     <None Include="wwwroot\static\css\main.5640331b.css.map" />
+    <None Include="wwwroot\static\js\462.a5fce5f8.chunk.js" />
+    <None Include="wwwroot\static\js\462.a5fce5f8.chunk.js.map" />
     <None Include="wwwroot\static\js\845.024e388e.chunk.js" />
     <None Include="wwwroot\static\js\845.024e388e.chunk.js.map" />
     <None Include="wwwroot\static\js\845.2be9191b.chunk.js" />
     <None Include="wwwroot\static\js\845.2be9191b.chunk.js.map" />
     <None Include="wwwroot\static\js\main.94a02411.js" />
     <None Include="wwwroot\static\js\main.94a02411.js.map" />
+    <None Include="wwwroot\static\js\main.b1eccd5a.js" />
+    <None Include="wwwroot\static\js\main.b1eccd5a.js.map" />
     <None Include="wwwroot\static\js\main.c2f82821.js" />
     <None Include="wwwroot\static\js\main.c2f82821.js.map" />
     <None Include="wwwroot\static\media\seri.f75e23367251b97803c6.webp" />
@@ -28,6 +33,7 @@
     <PackageReference Include="EFCore.BulkExtensions" Version="8.0.3" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.61" />
     <PackageReference Include="itext7" Version="8.0.4" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.7" />
