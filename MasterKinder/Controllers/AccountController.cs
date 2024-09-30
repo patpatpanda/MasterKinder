@@ -90,6 +90,13 @@ namespace MasterKinder.Controllers
                     return BadRequest(ModelState);
                 }
 
+                // Kontrollera om angivet SchoolId finns i databasen
+                var schoolExists = await _context.Forskolans.AnyAsync(s => s.Id == model.SchoolId);
+                if (!schoolExists)
+                {
+                    return BadRequest(new { message = "Ogiltigt SchoolId." });
+                }
+
                 var user = new ApplicationUser
                 {
                     UserName = model.Email,
@@ -118,6 +125,7 @@ namespace MasterKinder.Controllers
             }
         }
 
+
         [HttpPost("update-school/{id}")]
         public async Task<IActionResult> UpdateSchool(int id, [FromBody] ForskolanUpdateModel model)
         {
@@ -131,7 +139,6 @@ namespace MasterKinder.Controllers
                 return Unauthorized(new { message = "Ingen token hittades." });
             }
 
-            // Verifiera JWT-tokenen manuellt
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
 
@@ -146,13 +153,12 @@ namespace MasterKinder.Controllers
                     ValidIssuer = _configuration["Jwt:Issuer"],
                     ValidAudience = _configuration["Jwt:Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ClockSkew = TimeSpan.Zero // Optional: reduce the tolerance on the token expiry time
+                    ClockSkew = TimeSpan.Zero
                 }, out SecurityToken validatedToken);
 
                 var jwtToken = (JwtSecurityToken)validatedToken;
                 var userId = jwtToken.Claims.First(x => x.Type == "sub").Value;
 
-                // Hämta användaren med userId
                 var user = await _userManager.FindByIdAsync(userId);
                 if (user == null)
                 {
@@ -179,11 +185,43 @@ namespace MasterKinder.Controllers
                     };
                 }
 
-                logs.Add($"Uppdaterar förskolans beskrivning från '{school.Beskrivning}' till '{model.Beskrivning}'.");
+                // Uppdatera skolans uppgifter om de är angivna i modellen
+                if (!string.IsNullOrEmpty(model.Namn))
+                {
+                    logs.Add($"Uppdaterar namn från '{school.Namn}' till '{model.Namn}'.");
+                    school.Namn = model.Namn;
+                }
 
-                school.Beskrivning = model.Beskrivning;
+                if (!string.IsNullOrEmpty(model.Adress))
+                {
+                    logs.Add($"Uppdaterar adress från '{school.Adress}' till '{model.Adress}'.");
+                    school.Adress = model.Adress;
+                }
+
+                if (!string.IsNullOrEmpty(model.Beskrivning))
+                {
+                    logs.Add($"Uppdaterar beskrivning från '{school.Beskrivning}' till '{model.Beskrivning}'.");
+                    school.Beskrivning = model.Beskrivning;
+                }
+
+                // Fortsätt uppdatera alla fält
+                school.TypAvService = model.TypAvService ?? school.TypAvService;
+                school.VerksamI = model.VerksamI ?? school.VerksamI;
+                school.Organisationsform = model.Organisationsform ?? school.Organisationsform;
+                school.AntalBarn = model.AntalBarn ?? school.AntalBarn;
+                school.AntalBarnPerArsarbetare = model.AntalBarnPerArsarbetare ?? school.AntalBarnPerArsarbetare;
+                school.AndelLegitimeradeForskollarare = model.AndelLegitimeradeForskollarare ?? school.AndelLegitimeradeForskollarare;
+                school.Webbplats = model.Webbplats ?? school.Webbplats;
+                school.InriktningOchProfil = model.InriktningOchProfil ?? school.InriktningOchProfil;
+                school.InneOchUtemiljo = model.InneOchUtemiljo ?? school.InneOchUtemiljo;
+                school.KostOchMaltider = model.KostOchMaltider ?? school.KostOchMaltider;
+                school.MalOchVision = model.MalOchVision ?? school.MalOchVision;
+                school.MerOmOss = model.MerOmOss ?? school.MerOmOss;
+                school.Latitude = model.Latitude ?? school.Latitude;
+                school.Longitude = model.Longitude ?? school.Longitude;
+                school.BildUrl = model.BildUrl ?? school.BildUrl;
+
                 await _context.SaveChangesAsync();
-
                 logs.Add("Uppdateringen genomfördes framgångsrikt.");
                 return Ok(new ResponseModel("Uppdatering lyckades", logs));
             }
@@ -220,9 +258,25 @@ namespace MasterKinder.Controllers
 
         public class ForskolanUpdateModel
         {
-
+            public string? Namn { get; set; }
+            public string? Adress { get; set; }
             public string? Beskrivning { get; set; }
-            // Andra fält...
+            public string? TypAvService { get; set; }
+            public string? VerksamI { get; set; }
+            public string? Organisationsform { get; set; }
+            public int? AntalBarn { get; set; }
+            public double? AntalBarnPerArsarbetare { get; set; }
+            public double? AndelLegitimeradeForskollarare { get; set; }
+            public string? Webbplats { get; set; }
+            public string? InriktningOchProfil { get; set; }
+            public string? InneOchUtemiljo { get; set; }
+            public string? KostOchMaltider { get; set; }
+            public string? MalOchVision { get; set; }
+            public string? MerOmOss { get; set; }
+            public double? Latitude { get; set; }
+            public double? Longitude { get; set; }
+            public string? BildUrl { get; set; }
         }
+
     }
 }
